@@ -91,11 +91,11 @@
   	</div>
     <div class="article-info profile-block">
       <div class="article-info-block">
-        4
+        5
         <span>posts</span>
       </div>
       <div class="article-info-block">
-        2
+        3
         <span>tags</span>
       </div>
     </div>
@@ -118,6 +118,71 @@
 </aside>
       
       <section id="main">
+      <article id="post-唯一约束和唯一索引" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/09/27/唯一约束和唯一索引/">唯一约束和唯一索引</a>
+    </h1>
+  
+
+        <div class="article-meta">
+          <div class="article-date">
+  <i class="fa fa-calendar"></i>
+  <a href="/2015/09/27/唯一约束和唯一索引/">
+    <time datetime="2015-09-27T03:16:22.000Z" itemprop="datePublished">2015-09-27</time>
+  </a>
+</div>
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1438109519352-a52c41243c1a.jpeg" alt=""><br>记录下之前生产发布出的一个事故，反思。<br>原因是因为业务变动，一张表的唯一约束需要干掉。发布前执行了DROP CONSTRAINT语句，之后数据库压力瞬间上来。因为这张表的是张大表，操作又频繁。而把删除唯一约束的同时把一个很关键的索引给干掉了。造成这起事故的最根本原因是对唯一约束和索引的认识不够。经过一系列的测试后，得出以下两个学习结果：</p>
+<ul>
+<li><strong>oracle在创建唯一约束的时会创建唯一索引，如果之前有索引则会使用之前存在的索引。</strong></li>
+<li><strong>在删除唯一约束时，oracle会级联删除oracle自动生成的唯一索引。如果这个索引是手动先创建的，则不会被删除</strong><br>附上一些测试脚本：<br>  —建测试表<br>  create table GE_TEST<br>  (<pre><code>id                   <span class="function"><span class="title">NUMBER</span><span class="params">(<span class="number">19</span>)</span></span> not null,
+bill_code            <span class="function"><span class="title">VARCHAR2</span><span class="params">(<span class="number">255</span> CHAR)</span></span>
+</code></pre>  );<br>  —创建唯一约束<br>  alter table ge_test add constraint idx_bc unique(bill_code);<br>  —删除约束<br>  alter table ge_test drop constraint idx_bc<br>  —创建索引<br>  create index idx_bc on ge_test(bill_code);<br>  —删除索引<br>  drop index idx_bc<br>  —查看约束<br>  SELECT constraint_name,constraint_type,table_name,index_owner,index_name FROM user_constraints where table_name = ‘GE_TEST’;<br>  —查看索引<br>  SELECT index_name,index_type FROM user_indexes t WHERE t.table_name=’GE_TEST’;</li>
+</ul>
+<p>删除唯一约束保留索引正确姿势：<br>    Alter table table_name Drop Constraint idx_name keep index</p>
+<p>为了避免再发生这种情况。写了个Ruby脚本去检查每次要执行的DDL脚本。把删除索引和删除唯一约束都定义为危险动作。</p>
+<pre><code>#!/usr/bin/env ruby
+
+filename = ARGV[0]
+<span class="keyword">enc</span> = ARGV.length &gt; 1 ? ARGV[1].to_s : 'utf-8'
+<span class="keyword">if</span> <span class="keyword">File</span>.exist?(filename)
+  <span class="keyword">file</span> = <span class="keyword">File</span>.<span class="keyword">open</span>(filename, <span class="string">"r:#{enc}"</span>)
+  <span class="keyword">file</span>.each_line { |<span class="keyword">line</span>| <span class="keyword">print</span> <span class="string">"#{file.lineno} : "</span>, <span class="keyword">line</span> <span class="keyword">if</span> /<span class="keyword">DROP</span> +(<span class="keyword">CONSTRAINT</span>|INDEX)/i =~ <span class="keyword">line</span> }
+  <span class="keyword">file</span>.<span class="keyword">close</span>
+  puts <span class="string">"Done"</span>
+<span class="keyword">else</span>
+  puts <span class="string">"No file: #{filename}"</span>
+end
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cif2248es00007532uplrli60" class="article-share-link">Share</a>
+      
+        <a href="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/#ds-thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+    
       <article id="代码生成项目-代码生成项目" class="article article-type-代码生成项目" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -134,7 +199,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cif21yxts0006zk326xnm0zce" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cif22287k00061v324cha4y3v" class="article-share-link">Share</a>
       
         <a href="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/#ds-thread" class="article-comment-link">Comments</a>
       
@@ -194,7 +259,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cif21yxtl0002zk325is4hkw7" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cif22287d00021v32e5roawyg" class="article-share-link">Share</a>
       
         <a href="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/#ds-thread" class="article-comment-link">Comments</a>
       
@@ -250,7 +315,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="cif21yxtw0009zk32zjypvssa" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="cif22287o00091v32pc76lxca" class="article-share-link">Share</a>
       
         <a href="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/#ds-thread" class="article-comment-link">Comments</a>
       
@@ -293,7 +358,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cif21yxtr0005zk32j919k090" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cif22287i00051v32h7bqaq9b" class="article-share-link">Share</a>
       
         <a href="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/#ds-thread" class="article-comment-link">Comments</a>
       
@@ -313,6 +378,24 @@
     <h3 class="widget-title">recents</h3>
     <div class="widget">
       <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              <a href="/2015/09/27/唯一约束和唯一索引/" class="thumbnail">
+  
+    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/photo-1438109519352-a52c41243c1a.jpeg
+)" alt="唯一约束和唯一索引" class="thumbnail-image"></span>
+  
+</a>
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"></p>
+              <p class="item-title"><a href="/2015/09/27/唯一约束和唯一索引/" class="title">唯一约束和唯一索引</a></p>
+              <p class="item-date"><time datetime="2015-09-27T03:16:22.000Z" itemprop="datePublished">2015-09-27</time></p>
+            </div>
+          </li>
         
           <li>
             
@@ -396,7 +479,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Coding-life/">Coding life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Coding-life/">Coding life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/oracle/">oracle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -405,7 +488,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">tag cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Coding-life/" style="font-size: 10px;">Coding life</a> <a href="/tags/python/" style="font-size: 10px;">python</a>
+      <a href="/tags/Coding-life/" style="font-size: 10px;">Coding life</a> <a href="/tags/oracle/" style="font-size: 10px;">oracle</a> <a href="/tags/python/" style="font-size: 10px;">python</a>
     </div>
   </div>
 
@@ -414,7 +497,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
