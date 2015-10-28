@@ -145,15 +145,32 @@
 <li><strong>oracle在创建唯一约束的时会创建唯一索引，如果之前有索引则会使用之前存在的索引。</strong></li>
 <li><strong>在删除唯一约束时，oracle会级联删除oracle自动生成的唯一索引。如果这个索引是手动先创建的，则不会被删除</strong><br>附上一些测试脚本：</li>
 </ul>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">` --&#24314;&#27979;&#35797;&#34920;&#10; create table GE_TEST&#10; (&#10;   id                   NUMBER(19) not null,&#10;   bill_code            VARCHAR2(255 CHAR)&#10; );&#10; --&#21019;&#24314;&#21807;&#19968;&#32422;&#26463;&#10; alter table ge_test add constraint idx_bc unique(bill_code);&#10; --&#21024;&#38500;&#32422;&#26463;&#10; alter table ge_test drop constraint idx_bc&#10; --&#21019;&#24314;&#32034;&#24341;&#10; create index idx_bc on ge_test(bill_code);&#10; --&#21024;&#38500;&#32034;&#24341;&#10; drop index idx_bc&#10; --&#26597;&#30475;&#32422;&#26463;&#10; SELECT constraint_name,constraint_type,table_name,index_owner,index_name FROM user_constraints where table_name = &#39;GE_TEST&#39;;&#10; --&#26597;&#30475;&#32034;&#24341;&#10; SELECT index_name,index_type FROM user_indexes t WHERE t.table_name=&#39;GE_TEST&#39;;</span><br></pre></td></tr></table></figure>
-<p>`<br>删除唯一约束保留索引正确姿势：<br><code>Alter table table_name Drop Constraint idx_name keep index</code></p>
-<p>为了避免再发生这种情况。写了个Ruby脚本去检查每次要执行的DDL脚本。把删除索引和删除唯一约束都定义为危险动作。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">`# !/usr/bin/env ruby&#10; &#10; filename = ARGV[0]()&#10; enc = ARGV.length \&#62; 1 ? ARGV[1]().to_s : &#39;utf-8&#39;&#10; if File.exist?(filename)&#10;   file = File.open(filename, &#34;r:#&#123;enc&#125;&#34;)&#10;   file.each_line &#123; |line| print &#34;#&#123;file.lineno&#125; : &#34;, line if /DROP +(CONSTRAINT|INDEX)/i = line &#125;&#10;   file.close&#10;   puts &#34;Done&#34;&#10; else&#10;   puts &#34;No file: #&#123;filename&#125;&#34;&#10; end</span><br></pre></td></tr></table></figure></p>
-<p>`</p>
+<p><code>--建测试表
+ create table GE_TEST
+ (
+   id                   NUMBER(19) not null,
+   bill_code            VARCHAR2(255 CHAR)
+ );
+ --创建唯一约束
+ alter table ge_test add constraint idx_bc unique(bill_code);
+ --删除约束
+ alter table ge_test drop constraint idx_bc
+ --创建索引
+ create index idx_bc on ge_test(bill_code);
+ --删除索引
+ drop index idx_bc
+ --查看约束
+ SELECT constraint_name,constraint_type,table_name,index_owner,index_name FROM user_constraints where table_name = &#39;GE_TEST&#39;;
+ --查看索引
+ SELECT index_name,index_type FROM user_indexes t WHERE t.table_name=&#39;GE_TEST&#39;;</code></p>
+<p>删除唯一约束保留索引正确姿势：<br><code>Alter table table_name Drop Constraint idx_name keep index</code></p>
+<p>为了避免再发生这种情况。写了个Ruby脚本去检查每次要执行的DDL脚本。把删除索引和删除唯一约束都定义为危险动作。<br>``</p>
+<h1 id="!/usr/bin/env_ruby">!/usr/bin/env ruby</h1><p> filename = ARGV<a href="">0</a><br> enc = ARGV.length > 1 ? ARGV<a href="">1</a>.to_s : ‘utf-8’<br> if File.exist?(filename)<br>   file = File.open(filename, “r:#{enc}”)<br>   file.each_line { |line| print “#{file.lineno} : “, line if /DROP +(CONSTRAINT|INDEX)/i = line }<br>   file.close<br>   puts “Done”<br> else<br>   puts “No file: #{filename}”<br> end<br>``</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cigay31ea0003r132bbvwzjtj" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cigay4zwm0003s132vgkrxbpg" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
@@ -200,7 +217,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cigay31el000ar132hlzj13zy" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cigay4zwz000as1325wmcpm9k" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
@@ -258,7 +275,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cigay31eg0006r132wzybps5u" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cigay4zwu0006s132o4ynt3ki" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -312,7 +329,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="cigay31em000dr132biwnre1j" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="cigay4zx0000ds132biygnekq" class="article-share-link">Share</a>
       
       
     </footer>
@@ -353,7 +370,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cigay31ek0009r1323x4ws0iq" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cigay4zwx0009s132kqhh9v1v" class="article-share-link">Share</a>
       
       
     </footer>
