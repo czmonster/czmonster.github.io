@@ -16,7 +16,7 @@ oracle在创建唯一约束的时会创建唯一索引，如果之前有索引">
 
 oracle在创建唯一约束的时会创建唯一索引，如果之前有索引">
 <meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1438109519352-a52c41243c1a.jpeg">
-<meta property="og:updated_time" content="2015-09-27T05:19:10.000Z">
+<meta property="og:updated_time" content="2015-10-28T14:43:48.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="唯一约束和唯一索引">
 <meta name="twitter:description" content="记录下之前生产发布出的一个事故，反思。原因是因为业务变动，一张表的唯一约束需要干掉。发布前执行了DROP CONSTRAINT语句，之后数据库压力瞬间上来。因为这张表的是张大表，操作又频繁。而把删除唯一约束的同时把一个很关键的索引给干掉了。造成这起事故的最根本原因是对唯一约束和索引的认识不够。经过一系列的测试后，得出以下两个学习结果：
@@ -172,7 +172,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cif239ajs00035k32s775rjm0" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cigawxh7w0003ds327hpioc9s" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
