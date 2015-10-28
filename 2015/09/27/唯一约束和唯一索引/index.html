@@ -16,7 +16,7 @@ oracle在创建唯一约束的时会创建唯一索引，如果之前有索引">
 
 oracle在创建唯一约束的时会创建唯一索引，如果之前有索引">
 <meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1438109519352-a52c41243c1a.jpeg">
-<meta property="og:updated_time" content="2015-10-28T15:19:28.000Z">
+<meta property="og:updated_time" content="2015-10-28T15:22:08.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="唯一约束和唯一索引">
 <meta name="twitter:description" content="记录下之前生产发布出的一个事故，反思。原因是因为业务变动，一张表的唯一约束需要干掉。发布前执行了DROP CONSTRAINT语句，之后数据库压力瞬间上来。因为这张表的是张大表，操作又频繁。而把删除唯一约束的同时把一个很关键的索引给干掉了。造成这起事故的最根本原因是对唯一约束和索引的认识不够。经过一系列的测试后，得出以下两个学习结果：
@@ -150,28 +150,29 @@ oracle在创建唯一约束的时会创建唯一索引，如果之前有索引">
         <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1438109519352-a52c41243c1a.jpeg" alt=""><br>记录下之前生产发布出的一个事故，反思。<br>原因是因为业务变动，一张表的唯一约束需要干掉。发布前执行了DROP CONSTRAINT语句，之后数据库压力瞬间上来。因为这张表的是张大表，操作又频繁。而把删除唯一约束的同时把一个很关键的索引给干掉了。造成这起事故的最根本原因是对唯一约束和索引的认识不够。经过一系列的测试后，得出以下两个学习结果：</p>
 <ul>
 <li><strong>oracle在创建唯一约束的时会创建唯一索引，如果之前有索引则会使用之前存在的索引。</strong></li>
-<li><strong>在删除唯一约束时，oracle会级联删除oracle自动生成的唯一索引。如果这个索引是手动先创建的，则不会被删除</strong><br>附上一些测试脚本：</li>
+<li><strong>在删除唯一约束时，oracle会级联删除oracle自动生成的唯一索引。如果这个索引是手动先创建的，则不会被删除</strong><br>附上一些测试脚本：<br>  —建测试表<br>  create table GE_TEST<br>  (<pre><code>id                 <span class="function"><span class="title">NUMBER</span><span class="params">(<span class="number">19</span>)</span></span> not null,
+bill_code            <span class="function"><span class="title">VARCHAR2</span><span class="params">(<span class="number">255</span> CHAR)</span></span>
+</code></pre>   );<br>  —创<br>  建唯一约束<br>  alter table ge_test add constraint idx_bc unique(bill_code);<br>  —删除约束<br>  alter table ge_test drop constraint idx_bc<br>  —创建索引<br>  create index idx_bc on ge_test(bill_code);<br>  —删除索引<br>  drop index idx_bc<br>  —查看约束<br>  SELECT constraint_name,constraint_type,table_name,index_owner,index_name FROM user_constraints where table_name = ‘GE_TEST’;<br>  —查看索引<br>  SELECT index_name,index_type FROM user_indexes t WHERE t.table_name=’GE_TEST’;</li>
 </ul>
-<p><code>
-</code>—建测试表<br> create table GE_TEST<br> (<br>   id                   NUMBER(19) not null,<br>   bill_code            VARCHAR2(255 CHAR)<br> );<br> —创建唯一约束<br> alter table ge_test add constraint idx_bc unique(bill_code);<br> —删除约束<br> alter table ge_test drop constraint idx_bc<br> —创建索引<br> create index idx_bc on ge_test(bill_code);<br> —删除索引<br> drop index idx_bc<br> —查看约束<br> SELECT constraint_name,constraint_type,table_name,index_owner,index_name FROM user_constraints where table_name = ‘GE_TEST’;<br> —查看索引<br> SELECT index_name,index_type FROM user_indexes t WHERE t.table_name=’GE_TEST’;<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">`&#10;&#21024;&#38500;&#21807;&#19968;&#32422;&#26463;&#20445;&#30041;&#32034;&#24341;&#27491;&#30830;&#23039;&#21183;&#65306;&#10;`` Alter table table_name Drop Constraint idx_name keep index ``&#10;&#10;&#20026;&#20102;&#36991;&#20813;&#20877;&#21457;&#29983;&#36825;&#31181;&#24773;&#20917;&#12290;&#20889;&#20102;&#20010;Ruby&#33050;&#26412;&#21435;&#26816;&#26597;&#27599;&#27425;&#35201;&#25191;&#34892;&#30340;DDL&#33050;&#26412;&#12290;&#25226;&#21024;&#38500;&#32034;&#24341;&#21644;&#21024;&#38500;&#21807;&#19968;&#32422;&#26463;&#37117;&#23450;&#20041;&#20026;&#21361;&#38505;&#21160;&#20316;&#12290;</span><br></pre></td></tr></table></figure></p>
-<p><code># !/usr/bin/env ruby
- filename = ARGV[0]()
- enc = ARGV.length \&gt; 1 ? ARGV[1]().to_s : &#39;utf-8&#39;
- if File.exist?(filename)
-   file = File.open(filename, &quot;r:#{enc}&quot;)
-   file.each_line { |line| print &quot;#{file.lineno} : &quot;, line if /DROP +(CONSTRAINT|INDEX)/i = line }
-   file.close
-   puts &quot;Done&quot;
- else
-   puts &quot;No file: #{filename}&quot;
- end
-```
-</code></p>
+<p>删除唯一约束保留索引正确姿势：<br>    Alter table table_name Drop Constraint idx_name keep index</p>
+<p>为了避免再发生这种情况。写了个Ruby脚本去检查每次要执行的DDL脚本。把删除索引和删除唯一约束都定义为危险动作。</p>
+<pre><code>#!/usr/bin/env ruby
 
+filename = ARGV[0]
+<span class="keyword">enc</span> = ARGV.length &gt; 1 ? ARGV[1].to_s : 'utf-8'
+<span class="keyword">if</span> <span class="keyword">File</span>.exist?(filename)
+  <span class="keyword">file</span> = <span class="keyword">File</span>.<span class="keyword">open</span>(filename, <span class="string">"r:#{enc}"</span>)
+  <span class="keyword">file</span>.each_line { |<span class="keyword">line</span>| <span class="keyword">print</span> <span class="string">"#{file.lineno} : "</span>, <span class="keyword">line</span> <span class="keyword">if</span> /<span class="keyword">DROP</span> +(<span class="keyword">CONSTRAINT</span>|INDEX)/i =~ <span class="keyword">line</span> }
+  <span class="keyword">file</span>.<span class="keyword">close</span>
+  puts <span class="string">"Done"</span>
+<span class="keyword">else</span>
+  puts <span class="string">"No file: #{filename}"</span>
+end
+</code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cigay7e1a0003t232hpfnkt0e" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cigayalpa0003u0327wlyv1bh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
