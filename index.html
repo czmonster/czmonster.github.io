@@ -143,10 +143,10 @@
         <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1448814100339-234df1d4005d.jpeg" alt=""><br>好久没有写博客了，把之前在公司Wiki上写的一篇文章放下来。<br>场景：由于特殊需求，Client对request进行了gzip压缩。而原有的apache服务器在中间做了一次解压缩后传给了后台server（请求数据体积大，后台不支持处理压缩过的请求）。而最近准备用Nginx替换掉笨重的apache。查资料发现Nginx和压缩相关的有gzip和gunzip。不过在这里都用不上。</p>
 <ul>
 <li>gzip实现的功能有：1、对request进行压缩。2、对response进行压缩。</li>
-<li>gunzip实现的功能有：对response进行解压缩。(gunzip模块默认编译时并不安装)<br>一番google之后发现nginx确实没有自带这样的功能…有介绍使用lua大法去解决这个问题…nginx lua模块安装参考<a href="https://github.com/openresty/lua-nginx-module" target="_blank" rel="external">lua-nginx-module</a><br>用lua进行gzip压缩需要借助lua-zlib （<a href="https://github.com/brimworks/lua-zlib）C语言编写。" target="_blank" rel="external">https://github.com/brimworks/lua-zlib）C语言编写。</a><h1 id="cd_/usr/local/src">cd /usr/local/src</h1><h1 id="yum_install_git_cmake">yum install git cmake</h1><h1 id="git_clone_https://github-com/brimworks/lua-zlib-git">git clone <a href="https://github.com/brimworks/lua-zlib.git" target="_blank" rel="external">https://github.com/brimworks/lua-zlib.git</a></h1><h1 id="cd_lua-zlib/">cd lua-zlib/</h1><h1 id="cmake_-DLUA_INCLUDE_DIR=/usr/local/include/luajit-2-0_-DLUA_LIBRARIES=/usr/local/lib_-DUSE_LUAJIT=ON_-DUSE_LUA=OFF">cmake -DLUA_INCLUDE_DIR=/usr/local/include/luajit-2.0 -DLUA_LIBRARIES=/usr/local/lib -DUSE_LUAJIT=ON -DUSE_LUA=OFF</h1>  这里第一次安装时没有出错，但是在新服务器重现时报异常，自己重新编译了cmake以后成功。<br>  CMake Error at /usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake:57 (MESSAGE):<pre><code>REQUIRED_VARS <span class="list">(<span class="keyword">missing</span>: VERSION_VAR)</span>
+<li>gunzip实现的功能有：对response进行解压缩。(gunzip模块默认编译时并不安装)<br>一番google之后发现nginx确实没有自带这样的功能…有介绍使用lua大法去解决这个问题…nginx lua模块安装参考<a href="https://github.com/openresty/lua-nginx-module" target="_blank" rel="external">lua-nginx-module</a><br>用lua进行gzip压缩需要借助lua-zlib （<a href="https://github.com/brimworks/lua-zlib）C语言编写。" target="_blank" rel="external">https://github.com/brimworks/lua-zlib）C语言编写。</a><br>  cd /usr/local/src<br>  yum install git cmake<br>  git clone <a href="https://github.com/brimworks/lua-zlib.git" target="_blank" rel="external">https://github.com/brimworks/lua-zlib.git</a><br>  cd lua-zlib/<br>  cmake -DLUA_INCLUDE_DIR=/usr/local/include/luajit-2.0 -DLUA_LIBRARIES=/usr/local/lib -DUSE_LUAJIT=ON -DUSE_LUA=OFF<br>  这里第一次安装时没有出错，但是在新服务器重现时报异常，自己重新编译了cmake以后成功。<br>  CMake Error at /usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake:57 (MESSAGE):<pre><code>REQUIRED_VARS <span class="list">(<span class="keyword">missing</span>: VERSION_VAR)</span>
 </code></pre>  Call Stack (most recent call first):<pre><code>cmake/Modules/FindLuaJIT<span class="class">.cmake</span>:<span class="number">58</span> (FIND_PACKAGE_HANDLE_STANDARD_ARGS)
 CMakeLists<span class="class">.txt</span>:<span class="number">20</span> (find_package)
-</code></pre><h1 id="make_&amp;&amp;_make_install">make &amp;&amp; make install</h1><h1 id="luajit_然后在实时编辑器里输入_require_‘zlib’_回车，如果没有报错则表示该库已成功安装。">luajit  然后在实时编辑器里输入 require ‘zlib’ 回车，如果没有报错则表示该库已成功安装。</h1>以下是lua脚本inflate.lua：<br>  local zlib = require “zlib”<br>  file = io.open(“/etc/nginx/pos_data.txt”,”a”)<br>  local encoding = ngx.req.get_headers()[“Content-Encoding”]<br>  if encoding == “gzip” then<pre><code>--这行一定不能漏，要不然下面获得的是个<span class="literal">nil</span>
+</code></pre>  make &amp;&amp; make install<br>  luajit  然后在实时编辑器里输入 require ‘zlib’ 回车，如果没有报错则表示该库已成功安装。<br>以下是lua脚本inflate.lua：<br>  local zlib = require “zlib”<br>  file = io.open(“/etc/nginx/pos_data.txt”,”a”)<br>  local encoding = ngx.req.get_headers()[“Content-Encoding”]<br>  if encoding == “gzip” then<pre><code>--这行一定不能漏，要不然下面获得的是个<span class="literal">nil</span>
 ngx.req.read_body<span class="literal">()</span>
 <span class="keyword">local</span> body =ngx.req.get_body_data<span class="literal">()</span>
 <span class="keyword">if</span> body <span class="keyword">then</span>
@@ -156,16 +156,24 @@ ngx.req.read_body<span class="literal">()</span>
         ngx.req.set_body_data(uncompress)
         ngx.req.clear_header(<span class="string">"Content-Encoding"</span>)
 <span class="keyword">end</span>
-</code></pre>  end<br>  file:close()</li>
+</code></pre>  end<br>  file:close()<br>由于找不到合适的断点方式只好把一些过程数据写入到文件中了.注意：记得把文件权限打开..要不然写文件时会报错..<br>  2016/01/06 12:40:10 [error] 25988#0: *4 lua entry thread aborted: runtime error: /etc/nginx/inflate.lua:17: attempt to index global ‘file’ (a nil value)<br>上面写好了lua脚本，那么要在ngxin中使用。修改nginx.conf<br>  ocation /XXX/ {<pre><code>    proxy_pass <span class="string">http:</span><span class="comment">//ip:port;</span>
+    rewrite_by_lua_file <span class="regexp">/etc/</span>nginx/inflate.lua;
+}
+</code></pre>测试异常，通过查看nginx的error.log是因为找不到zlib，怀疑是路径问题。需要把lua-zlib-master/zlib.so放到指定目录（我放在和inflate.la同目录下）然后测试通过。<br>之后又加了gzip对返回的response进行压缩处理（业务需求导致）完整的流程图：</li>
 </ul>
-<p>由于找不到合适的断点方式只好把一些过程数据写入到文件中了.注意：记得把文件权限打开..要不然写文件时会报错..<br>    2016/01/06 12:40:10 [error] 25988#0: *4 lua entry thread aborted: runtime error: /etc/nginx/inflate.lua:17: attempt to index global ‘file’ (a nil value)<br>上面写好了lua脚本，那么要在ngxin中使用。修改nginx.conf<br>    ocation /XXX/ {<br>                proxy_pass <a href="http://ip:port" target="_blank" rel="external">http://ip:port</a>;<br>                rewrite_by_lua_file /etc/nginx/inflate.lua;<br>            }<br>测试异常，通过查看nginx的error.log是因为找不到zlib，怀疑是路径问题。需要把lua-zlib-master/zlib.so放到指定目录（我放在和inflate.la同目录下）然后测试通过。<br>之后又加了gzip对返回的response进行压缩处理（业务需求导致）完整的流程图：</p>
 <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/image2016-1-6%2013-28-4.png" alt=""><br>TODO：<br>性能测试、压力测试。</p>
-<p>参考资料:<br><a href="http://huoding.com/2013/09/02/283" target="_blank" rel="external">http://huoding.com/2013/09/02/283</a><br>关于nginx lua : <a href="http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html" target="_blank" rel="external">http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html</a><br>关于nginx lua的各种api ：<a href="https://github.com/openresty/lua-nginx-module" target="_blank" rel="external">https://github.com/openresty/lua-nginx-module</a><br>关于lua zlib ：<a href="https://github.com/brimworks/lua-zlib" target="_blank" rel="external">https://github.com/brimworks/lua-zlib</a></p>
+<p>参考资料:</p>
+<ul>
+<li><a href="http://huoding.com/2013/09/02/283" target="_blank" rel="external">http://huoding.com/2013/09/02/283</a></li>
+<li>关于nginx lua : <a href="http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html" target="_blank" rel="external">http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html</a></li>
+<li>关于nginx lua的各种api ：<a href="https://github.com/openresty/lua-nginx-module" target="_blank" rel="external">https://github.com/openresty/lua-nginx-module</a></li>
+<li>关于lua zlib ：<a href="https://github.com/brimworks/lua-zlib" target="_blank" rel="external">https://github.com/brimworks/lua-zlib</a></li>
+</ul>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cija4kel5000d4f32sbm60k82" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cija4nhfu000d7n329vveotu3" class="article-share-link">Share</a>
       
       
     </footer>
@@ -225,7 +233,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cija4kekt00034f32l5yr358p" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cija4nhfj00037n328521yumn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
@@ -272,7 +280,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cija4kel3000a4f32t1wxs3ao" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cija4nhfs000a7n32yawxtogd" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
@@ -330,7 +338,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cija4kekz00064f32byfozdgg" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cija4nhfp00067n32voofznlq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -384,7 +392,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="cija4kel6000e4f326duehtqw" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="cija4nhfv000e7n32mw2xc8h6" class="article-share-link">Share</a>
       
       
     </footer>
@@ -425,7 +433,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cija4kel200094f32n77x8gw3" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cija4nhfr00097n32awd9eddz" class="article-share-link">Share</a>
       
       
     </footer>
