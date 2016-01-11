@@ -17,7 +17,7 @@ gzip实现的功能有：1">
 gzip实现的功能有：1">
 <meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1448814100339-234df1d4005d.jpeg">
 <meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/image2016-1-6%2013-28-4.png">
-<meta property="og:updated_time" content="2016-01-11T15:55:19.000Z">
+<meta property="og:updated_time" content="2016-01-11T15:57:25.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="实现对gzip压缩过的request进行解压缩">
 <meta name="twitter:description" content="好久没有写博客了，把之前在公司Wiki上写的一篇文章放下来。场景：由于特殊需求，Client对request进行了gzip压缩。而原有的apache服务器在中间做了一次解压缩后传给了后台server（请求数据体积大，后台不支持处理压缩过的请求）。而最近准备用Nginx替换掉笨重的apache。查资料发现Nginx和压缩相关的有gzip和gunzip。不过在这里都用不上。
@@ -151,7 +151,7 @@ gzip实现的功能有：1">
         <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1448814100339-234df1d4005d.jpeg" alt=""><br>好久没有写博客了，把之前在公司Wiki上写的一篇文章放下来。<br>场景：由于特殊需求，Client对request进行了gzip压缩。而原有的apache服务器在中间做了一次解压缩后传给了后台server（请求数据体积大，后台不支持处理压缩过的请求）。而最近准备用Nginx替换掉笨重的apache。查资料发现Nginx和压缩相关的有gzip和gunzip。不过在这里都用不上。</p>
 <ul>
 <li>gzip实现的功能有：1、对request进行压缩。2、对response进行压缩。</li>
-<li>gunzip实现的功能有：对response进行解压缩。(gunzip模块默认编译时并不安装)<br>一番google之后发现nginx确实没有自带这样的功能…有介绍使用lua大法去解决这个问题…nginx lua模块安装参考<a href="https://github.com/openresty/lua-nginx-module" target="_blank" rel="external">lua-nginx-module</a><br>用lua进行gzip压缩需要借助lua-zlib （<a href="https://github.com/brimworks/lua-zlib）C语言编写。" target="_blank" rel="external">https://github.com/brimworks/lua-zlib）C语言编写。</a><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">`cd /usr/local/src&#10;yum install git cmake&#10;git clone https://github.com/brimworks/lua-zlib.git&#10;cd lua-zlib/&#10;cmake -DLUA_INCLUDE_DIR=/usr/local/include/luajit-2.0 -DLUA_LIBRARIES=/usr/local/lib -DUSE_LUAJIT=ON -DUSE_LUA=OFF&#10;make &#38;&#38; make install&#10;luajit&#160; &#28982;&#21518;&#22312;&#23454;&#26102;&#32534;&#36753;&#22120;&#37324;&#36755;&#20837; require &#39;zlib&#39; &#22238;&#36710;&#65292;&#22914;&#26524;&#27809;&#26377;&#25253;&#38169;&#21017;&#34920;&#31034;&#35813;&#24211;&#24050;&#25104;&#21151;&#23433;&#35013;&#12290;</span><br></pre></td></tr></table></figure>
+<li>gunzip实现的功能有：对response进行解压缩。(gunzip模块默认编译时并不安装)<br>一番google之后发现nginx确实没有自带这样的功能…有介绍使用lua大法去解决这个问题…nginx lua模块安装参考<a href="https://github.com/openresty/lua-nginx-module" target="_blank" rel="external">lua-nginx-module</a><br>用lua进行gzip压缩需要借助<a href="https://github.com/brimworks/lua-zlib" target="_blank" rel="external">lua-zlib</a>,C语言编写。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">`cd /usr/local/src&#10;yum install git cmake&#10;git clone https://github.com/brimworks/lua-zlib.git&#10;cd lua-zlib/&#10;cmake -DLUA_INCLUDE_DIR=/usr/local/include/luajit-2.0 -DLUA_LIBRARIES=/usr/local/lib -DUSE_LUAJIT=ON -DUSE_LUA=OFF&#10;make &#38;&#38; make install&#10;luajit&#160; &#28982;&#21518;&#22312;&#23454;&#26102;&#32534;&#36753;&#22120;&#37324;&#36755;&#20837; require &#39;zlib&#39; &#22238;&#36710;&#65292;&#22914;&#26524;&#27809;&#26377;&#25253;&#38169;&#21017;&#34920;&#31034;&#35813;&#24211;&#24050;&#25104;&#21151;&#23433;&#35013;&#12290;</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
 <p>`<br>以下是lua脚本inflate.lua：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">`local zlib = require &#34;zlib&#34;&#10;file = io.open(&#34;/etc/nginx/pos_data.txt&#34;,&#34;a&#34;)&#10;local encoding = ngx.req.get_headers()[&#34;Content-Encoding&#34;]()&#10;if encoding == &#34;gzip&#34; then&#10;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;--&#36825;&#34892;&#19968;&#23450;&#19981;&#33021;&#28431;&#65292;&#35201;&#19981;&#28982;&#19979;&#38754;&#33719;&#24471;&#30340;&#26159;&#20010;nil&#10;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;ngx.req.read_body()&#10;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;local body =ngx.req.get_body_data()&#10;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;if body then&#10;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;local stream = zlib.inflate()&#10;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;uncompress = stream(body)&#10;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;--file:write(uncompress)&#10;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;ngx.req.set_body_data(uncompress)&#10;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;ngx.req.clear_header(&#34;Content-Encoding&#34;)&#10;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;end&#10;end&#10;file:close()</span><br></pre></td></tr></table></figure></p>
@@ -170,7 +170,7 @@ gzip实现的功能有：1">
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cija5ia5h000dgd32vabonhj6" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cija5kuub000dha329onoun7o" class="article-share-link">Share</a>
       
       
     </footer>
