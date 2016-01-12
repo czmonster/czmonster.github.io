@@ -145,11 +145,7 @@
 <li>gzip实现的功能有：1、对request进行压缩。2、对response进行压缩。</li>
 <li>gunzip实现的功能有：对response进行解压缩。(gunzip模块默认编译时并不安装)</li>
 </ul>
-<p>一番google之后发现nginx确实没有自带这样的功能…有介绍使用lua大法去解决这个问题…nginx lua模块安装参考<a href="">lua-nginx-module</a><br>用lua进行gzip压缩需要借助lua-zlib,C语言编写。</p>
-<p>cd /usr/local/src<br>yum install git cmake<br>git clone <a href="https://github.com/brimworks/lua-zlib.git" target="_blank" rel="external">https://github.com/brimworks/lua-zlib.git</a><br>cd lua-zlib/<br>cmake -DLUA_INCLUDE_DIR=/usr/local/include/luajit-2.0 -DLUA_LIBRARIES=/usr/local/lib -DUSE_LUAJIT=ON -DUSE_LUA=OFF<br>make &amp;&amp; make install<br>luajit  然后在实时编辑器里输入 require ‘zlib’ 回车，如果没有报错则表示该库已成功安装。</p>
-<p>以下是lua脚本inflate.lua：<br>local zlib = require “zlib”<br>file = io.open(“/etc/nginx/pos_data.txt”,”a”)<br>local encoding = ngx.req.get_headers()<a href="">“Content-Encoding”</a><br>if encoding == “gzip” then<br>—这行一定不能漏，要不然下面获得的是个nil<br>        ngx.req.read_body()<br>        local body =ngx.req.get_body_data()<br>        if body then<br>                local stream = zlib.inflate()<br>                uncompress = stream(body)<br>                —file:write(uncompress)<br>                ngx.req.set_body_data(uncompress)<br>                ngx.req.clear_header(“Content-Encoding”)<br>        end<br>end<br>file:close()</p>
-<p>由于找不到合适的断点方式只好把一些过程数据写入到文件中了.注意：记得把文件权限打开..要不然写文件时会报错..<br>2016/01/06 12:40:10 <a href="">error</a> 25988#0: *4 lua entry thread aborted: runtime error: /etc/nginx/inflate.lua:17: attempt to index global ‘file’ (a nil value)<br>上面写好了lua脚本，那么要在ngxin中使用。修改nginx.conf :<br>location /XXX/ {<br>            proxy_pass <a href="http://ip:port" target="_blank" rel="external">http://ip:port</a>;<br>            rewrite_by_lua_file /etc/nginx/inflate.lua;}</p>
-<p>测试异常，通过查看nginx的error.log是因为找不到zlib，怀疑是路径问题。需要把lua-zlib-master/zlib.so放到指定目录（我放在和inflate.la同目录下）然后测试通过。<br>之后又加了gzip对返回的response进行压缩处理（业务需求导致）完整的流程图：</p>
+<p>一番google之后发现nginx确实没有自带这样的功能…有介绍使用lua大法去解决这个问题…nginx lua模块安装参考<a href="">lua-nginx-module</a><br>用lua进行gzip压缩需要借助lua-zlib,C语言编写。<br>    cd /usr/local/src<br>    yum install git cmake<br>    git clone <a href="https://github.com/brimworks/lua-zlib.git" target="_blank" rel="external">https://github.com/brimworks/lua-zlib.git</a><br>    cd lua-zlib/<br>    cmake -DLUA_INCLUDE_DIR=/usr/local/include/luajit-2.0 -DLUA_LIBRARIES=/usr/local/lib -DUSE_LUAJIT=ON -DUSE_LUA=OFF<br>    make &amp;&amp; make install<br>以下是lua脚本inflate.lua：<br>    local zlib = require “zlib”<br>    file = io.open(“/etc/nginx/pos_data.txt”,”a”)<br>    local encoding = ngx.req.get_headers()[“Content-Encoding”]<br>    if encoding == “gzip” then<br>    —这行一定不能漏，要不然下面获得的是个nil<br>    ngx.req.read_body()<br>    local body =ngx.req.get_body_data()<br>    if body then<br>    local stream = zlib.inflate()<br>    uncompress = stream(body)<br>    —file:write(uncompress)<br>    ngx.req.set_body_data(uncompress)<br>    ngx.req.clear_header(“Content-Encoding”)<br>    end<br>    end<br>    file:close()<br>由于找不到合适的断点方式只好把一些过程数据写入到文件中了.注意：记得把文件权限打开..要不然写文件时会报错..<br>    2016/01/06 12:40:10 [error] 25988#0: *4 lua entry thread aborted: runtime error: /etc/nginx/inflate.lua:17: attempt to index global ‘file’ (a nil value)<br>上面写好了lua脚本，那么要在ngxin中使用。修改nginx.conf :<br>    location /XXX/ {<br>    proxy_pass <a href="http://ip:port" target="_blank" rel="external">http://ip:port</a>;<br>    rewrite_by_lua_file /etc/nginx/inflate.lua;<br>    }<br>测试异常，通过查看nginx的error.log是因为找不到zlib，怀疑是路径问题。需要把lua-zlib-master/zlib.so放到指定目录（我放在和inflate.la同目录下）然后测试通过。<br>之后又加了gzip对返回的response进行压缩处理（业务需求导致）完整的流程图：</p>
 <p><img src="" alt=""><br>TODO：<br>性能测试、压力测试。</p>
 <p>参考资料:</p>
 <ul>
@@ -162,7 +158,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cijbh8gxg000d4132542sjl2m" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cijbhe49t000d56322g24lfxu" class="article-share-link">Share</a>
       
       
     </footer>
@@ -222,7 +218,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cijbh8gwz0003413279zyxff8" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cijbhe49g000356326lsntft4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
@@ -269,7 +265,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cijbh8gxf000a41324o60xe0v" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cijbhe49r000a56320tih67mo" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
@@ -327,7 +323,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cijbh8gx600064132wk3e5n2v" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cijbhe49n0006563216mzcnku" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -381,7 +377,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="cijbh8gxi000e413283wrvc9x" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="cijbhe49u000e5632wot9eyzl" class="article-share-link">Share</a>
       
       
     </footer>
@@ -422,7 +418,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cijbh8gx900094132qtnxbe8h" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cijbhe49q00095632qtgellwg" class="article-share-link">Share</a>
       
       
     </footer>
