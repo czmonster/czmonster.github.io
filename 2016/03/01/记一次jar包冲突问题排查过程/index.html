@@ -3,28 +3,19 @@
 <head>
   <meta charset="utf-8">
   
-  <title>代码生成项目 | Day Day Up</title>
+  <title>记一次jar包冲突问题排查过程 | Day Day Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="纯粹是为了学习Python才有了这么一个小项目。
-这个项目就是一个简单的代码生成项目,在JAVA开发中,有很多“神似”的代码,没有什么营养,于是就用代码生成去生成这些代码。
-一个月前已经把大部分功能完善了,只不过今天才最后修修补补完成。因为只是为了学习Python,功能很简单。
-直接贴地址:Code_Generate">
+  <meta name="description" content="今天在开发中遇到一个错误，初步判断是因为jar包冲突导致的。但是排查了maven依赖关系和检查了源代码都没有发现问题。后来只有在Tomcat中加上参数打印出启动时加载的类信息才定位到问题。具体的参数配置：-verbose:class最后发现在lib类中有另外一个相同的类，真正要使用的是maven所要引入的另一个jar包的类。而根本原因是这个项目在当时转maven时并没有将lib下的所有jar包删除">
 <meta property="og:type" content="article">
-<meta property="og:title" content="代码生成项目">
-<meta property="og:url" content="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/index.html">
+<meta property="og:title" content="记一次jar包冲突问题排查过程">
+<meta property="og:url" content="http://czmonster.github.io/hexo-theme-icarus/2016/03/01/记一次jar包冲突问题排查过程/index.html">
 <meta property="og:site_name" content="Day Day Up">
-<meta property="og:description" content="纯粹是为了学习Python才有了这么一个小项目。
-这个项目就是一个简单的代码生成项目,在JAVA开发中,有很多“神似”的代码,没有什么营养,于是就用代码生成去生成这些代码。
-一个月前已经把大部分功能完善了,只不过今天才最后修修补补完成。因为只是为了学习Python,功能很简单。
-直接贴地址:Code_Generate">
-<meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1431578500526-4d9613015464%20.jpeg">
-<meta property="og:updated_time" content="2015-10-28T15:11:49.000Z">
+<meta property="og:description" content="今天在开发中遇到一个错误，初步判断是因为jar包冲突导致的。但是排查了maven依赖关系和检查了源代码都没有发现问题。后来只有在Tomcat中加上参数打印出启动时加载的类信息才定位到问题。具体的参数配置：-verbose:class最后发现在lib类中有另外一个相同的类，真正要使用的是maven所要引入的另一个jar包的类。而根本原因是这个项目在当时转maven时并没有将lib下的所有jar包删除">
+<meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1449182325215-d517de72c42d.jpeg">
+<meta property="og:updated_time" content="2016-03-01T14:52:15.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="代码生成项目">
-<meta name="twitter:description" content="纯粹是为了学习Python才有了这么一个小项目。
-这个项目就是一个简单的代码生成项目,在JAVA开发中,有很多“神似”的代码,没有什么营养,于是就用代码生成去生成这些代码。
-一个月前已经把大部分功能完善了,只不过今天才最后修修补补完成。因为只是为了学习Python,功能很简单。
-直接贴地址:Code_Generate">
+<meta name="twitter:title" content="记一次jar包冲突问题排查过程">
+<meta name="twitter:description" content="今天在开发中遇到一个错误，初步判断是因为jar包冲突导致的。但是排查了maven依赖关系和检查了源代码都没有发现问题。后来只有在Tomcat中加上参数打印出启动时加载的类信息才定位到问题。具体的参数配置：-verbose:class最后发现在lib类中有另外一个相同的类，真正要使用的是maven所要引入的另一个jar包的类。而根本原因是这个项目在当时转maven时并没有将lib下的所有jar包删除">
   
   
     <link rel="icon" href="/favicon.png">
@@ -124,7 +115,7 @@
   </div>
 </aside>
       
-      <section id="main"><article id="代码生成项目-代码生成项目" class="article article-type-代码生成项目" itemscope itemprop="blogPost">
+      <section id="main"><article id="post-记一次jar包冲突问题排查过程" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
     
@@ -133,15 +124,15 @@
         
   
     <h1 class="article-title" itemprop="name">
-      代码生成项目
+      记一次jar包冲突问题排查过程
     </h1>
   
 
         <div class="article-meta">
           <div class="article-date">
   <i class="fa fa-calendar"></i>
-  <a href="/2015/08/08/代码生成项目/">
-    <time datetime="2015-08-08T07:31:53.000Z" itemprop="datePublished">2015-08-08</time>
+  <a href="/2016/03/01/记一次jar包冲突问题排查过程/">
+    <time datetime="2016-03-01T14:42:58.000Z" itemprop="datePublished">2016-03-01</time>
   </a>
 </div>
           
@@ -150,19 +141,16 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1431578500526-4d9613015464%20.jpeg" alt=""></p>
-<p>纯粹是为了学习Python才有了这么一个小项目。</p>
-<p>这个项目就是一个简单的代码生成项目,在JAVA开发中,有很多“神似”的代码,没有什么营养,于是就用代码生成去生成这些代码。</p>
-<p>一个月前已经把大部分功能完善了,只不过今天才最后修修补补完成。因为只是为了学习Python,功能很简单。</p>
-<p>直接贴地址:<a href="https://github.com/czmonster/code_generator" target="_blank" rel="external">Code_Generate</a></p>
+        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1449182325215-d517de72c42d.jpeg" alt=""></p>
+<p>   今天在开发中遇到一个错误，初步判断是因为jar包冲突导致的。但是排查了maven依赖关系和检查了源代码都没有发现问题。后来只有在Tomcat中加上参数打印出启动时加载的类信息才定位到问题。<br>具体的参数配置：-verbose:class<br>最后发现在lib类中有另外一个相同的类，真正要使用的是maven所要引入的另一个jar包的类。而根本原因是这个项目在当时转maven时并没有将lib下的所有jar包删除所导致的..特此记录一下。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cil9j9qm7000d4532lu7ixb39" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/03/01/记一次jar包冲突问题排查过程/" data-id="cil9j9qlr00034532g2968koc" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li></ul>
 
     </footer>
   </div>
@@ -170,19 +158,10 @@
     
 <nav id="article-nav">
   
-    <a href="/2015/09/27/唯一约束和唯一索引/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          唯一约束和唯一索引
-        
-      </div>
-    </a>
   
-  
-    <a href="/2015/07/19/关于最近工作中的一点反思/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">关于最近工作中的一点反思</div>
+      <div class="article-nav-title">实现对gzip压缩过的request进行解压缩</div>
     </a>
   
 </nav>
