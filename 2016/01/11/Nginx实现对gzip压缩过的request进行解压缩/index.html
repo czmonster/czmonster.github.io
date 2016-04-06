@@ -3,26 +3,26 @@
 <head>
   <meta charset="utf-8">
   
-  <title>实现对gzip压缩过的request进行解压缩 | Day Day Up</title>
+  <title>Nginx实现对gzip压缩过的request进行解压缩 | Day Day Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="好久没有写博客了，把之前在公司Wiki上写的一篇文章放下来。场景：由于特殊需求，Client对request进行了gzip压缩。而原有的apache服务器在中间做了一次解压缩后传给了后台server（请求数据体积大，后台不支持处理压缩过的请求）。而最近准备用Nginx替换掉笨重的apache。查资料发现Nginx和压缩相关的有gzip和gunzip。不过在这里都用不上。
 
-gzip实现的功能有：1">
+gzip实现的功能有：对">
 <meta property="og:type" content="article">
-<meta property="og:title" content="实现对gzip压缩过的request进行解压缩">
+<meta property="og:title" content="Nginx实现对gzip压缩过的request进行解压缩">
 <meta property="og:url" content="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/index.html">
 <meta property="og:site_name" content="Day Day Up">
 <meta property="og:description" content="好久没有写博客了，把之前在公司Wiki上写的一篇文章放下来。场景：由于特殊需求，Client对request进行了gzip压缩。而原有的apache服务器在中间做了一次解压缩后传给了后台server（请求数据体积大，后台不支持处理压缩过的请求）。而最近准备用Nginx替换掉笨重的apache。查资料发现Nginx和压缩相关的有gzip和gunzip。不过在这里都用不上。
 
-gzip实现的功能有：1">
+gzip实现的功能有：对">
 <meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1448814100339-234df1d4005d.jpeg">
 <meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/image2016-1-6%2013-28-4.png">
-<meta property="og:updated_time" content="2016-02-01T14:32:01.000Z">
+<meta property="og:updated_time" content="2016-04-06T12:53:10.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="实现对gzip压缩过的request进行解压缩">
+<meta name="twitter:title" content="Nginx实现对gzip压缩过的request进行解压缩">
 <meta name="twitter:description" content="好久没有写博客了，把之前在公司Wiki上写的一篇文章放下来。场景：由于特殊需求，Client对request进行了gzip压缩。而原有的apache服务器在中间做了一次解压缩后传给了后台server（请求数据体积大，后台不支持处理压缩过的请求）。而最近准备用Nginx替换掉笨重的apache。查资料发现Nginx和压缩相关的有gzip和gunzip。不过在这里都用不上。
 
-gzip实现的功能有：1">
+gzip实现的功能有：对">
   
   
     <link rel="icon" href="/favicon.png">
@@ -131,7 +131,7 @@ gzip实现的功能有：1">
         
   
     <h1 class="article-title" itemprop="name">
-      实现对gzip压缩过的request进行解压缩
+      Nginx实现对gzip压缩过的request进行解压缩
     </h1>
   
 
@@ -150,7 +150,7 @@ gzip实现的功能有：1">
       
         <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1448814100339-234df1d4005d.jpeg" alt=""><br>好久没有写博客了，把之前在公司Wiki上写的一篇文章放下来。<br>场景：由于特殊需求，Client对request进行了gzip压缩。而原有的apache服务器在中间做了一次解压缩后传给了后台server（请求数据体积大，后台不支持处理压缩过的请求）。而最近准备用Nginx替换掉笨重的apache。查资料发现Nginx和压缩相关的有gzip和gunzip。不过在这里都用不上。</p>
 <ul>
-<li>gzip实现的功能有：1、对request进行压缩。2、对response进行压缩。</li>
+<li>gzip实现的功能有：对response进行压缩。</li>
 <li>gunzip实现的功能有：对response进行解压缩。(gunzip模块默认编译时并不安装)</li>
 </ul>
 <p>一番google之后发现nginx确实没有自带这样的功能…有介绍使用lua大法去解决这个问题…nginx lua模块安装参考<a href="">lua-nginx-module</a><br>用lua进行gzip压缩需要借助lua-zlib,C语言编写。</p>
@@ -172,7 +172,7 @@ gzip实现的功能有：1">
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cimoutfme000doj32314vpmfr" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cimouva0a000dpr32hiqq8gdm" class="article-share-link">Share</a>
       
       
     </footer>
@@ -208,14 +208,14 @@ gzip实现的功能有：1">
               <a href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" class="thumbnail">
   
     <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/photo-1448814100339-234df1d4005d.jpeg
-)" alt="实现对gzip压缩过的request进行解压缩" class="thumbnail-image"></span>
+)" alt="Nginx实现对gzip压缩过的request进行解压缩" class="thumbnail-image"></span>
   
 </a>
             </div>
             
             <div class="item-inner">
               <p class="item-category"></p>
-              <p class="item-title"><a href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" class="title">实现对gzip压缩过的request进行解压缩</a></p>
+              <p class="item-title"><a href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" class="title">Nginx实现对gzip压缩过的request进行解压缩</a></p>
               <p class="item-date"><time datetime="2016-01-11T15:06:54.000Z" itemprop="datePublished">2016-01-11</time></p>
             </div>
           </li>

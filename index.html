@@ -123,7 +123,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/">实现对gzip压缩过的request进行解压缩</a>
+      <a class="article-title" href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/">Nginx实现对gzip压缩过的request进行解压缩</a>
     </h1>
   
 
@@ -142,7 +142,7 @@
       
         <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1448814100339-234df1d4005d.jpeg" alt=""><br>好久没有写博客了，把之前在公司Wiki上写的一篇文章放下来。<br>场景：由于特殊需求，Client对request进行了gzip压缩。而原有的apache服务器在中间做了一次解压缩后传给了后台server（请求数据体积大，后台不支持处理压缩过的请求）。而最近准备用Nginx替换掉笨重的apache。查资料发现Nginx和压缩相关的有gzip和gunzip。不过在这里都用不上。</p>
 <ul>
-<li>gzip实现的功能有：1、对request进行压缩。2、对response进行压缩。</li>
+<li>gzip实现的功能有：对response进行压缩。</li>
 <li>gunzip实现的功能有：对response进行解压缩。(gunzip模块默认编译时并不安装)</li>
 </ul>
 <p>一番google之后发现nginx确实没有自带这样的功能…有介绍使用lua大法去解决这个问题…nginx lua模块安装参考<a href="">lua-nginx-module</a><br>用lua进行gzip压缩需要借助lua-zlib,C语言编写。</p>
@@ -164,7 +164,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cimoutfme000doj32314vpmfr" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cimouva0a000dpr32hiqq8gdm" class="article-share-link">Share</a>
       
       
     </footer>
@@ -213,7 +213,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cimoutfm20003oj32i97zotlk" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cimouv9zy0003pr32j0zy2o9w" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
@@ -260,7 +260,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cimoutfmd000aoj320x4u94no" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cimouva09000apr32wrkpannt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
@@ -318,7 +318,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cimoutfm90006oj32ajh9keh0" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cimouva050006pr32f81m9ki0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -372,7 +372,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="cimoutfmf000eoj32rfnahxke" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="cimouva0c000epr32ihn89y5k" class="article-share-link">Share</a>
       
       
     </footer>
@@ -413,7 +413,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cimoutfmc0009oj32qs20svgq" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cimouva080009pr32uis21ejp" class="article-share-link">Share</a>
       
       
     </footer>
@@ -438,14 +438,14 @@
               <a href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" class="thumbnail">
   
     <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/photo-1448814100339-234df1d4005d.jpeg
-)" alt="实现对gzip压缩过的request进行解压缩" class="thumbnail-image"></span>
+)" alt="Nginx实现对gzip压缩过的request进行解压缩" class="thumbnail-image"></span>
   
 </a>
             </div>
             
             <div class="item-inner">
               <p class="item-category"></p>
-              <p class="item-title"><a href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" class="title">实现对gzip压缩过的request进行解压缩</a></p>
+              <p class="item-title"><a href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" class="title">Nginx实现对gzip压缩过的request进行解压缩</a></p>
               <p class="item-date"><time datetime="2016-01-11T15:06:54.000Z" itemprop="datePublished">2016-01-11</time></p>
             </div>
           </li>
