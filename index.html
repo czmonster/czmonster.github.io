@@ -143,7 +143,7 @@
         <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1427464407917-c817c9a0a6f6.jpeg" alt=""></p>
 <p>在学习分布式的时候总会碰到一致性hash算法，今天去学习了一下。</p>
 <h3 id="场景及要解决的问题">场景及要解决的问题</h3><p>分布式。假设有N台服务器，需要把一个object映射到不同的服务器上。<br>最开始的方法：hash(object)%N。这样就可以映射到对应的服务器上。<br>但是这样存在一个很严重的问题： 新增或者删除服务器的时候，N值变了，映射关系乱了，大部分数据就不在原有的服务器上了！</p>
-<h3 id="环形hash空间">环形hash空间</h3><p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/1.pic.jpg" alt=""></p>
+<h3 id="环形hash空间">环形hash空间</h3><p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/2.pic.jpg" alt=""></p>
 <p>现在有3台服务器和4个object对象。<br>1、对三台服务器进行hash（一般是ip地址）。获得三个值Node A、 Node B、Node C<br>2、对4个object对象进行hash。获得value 1、value 2、value 3、value 4<br>3、每个value1关联到顺时针遇到的第一个Node。<br>如图，则<br>value1—&gt;Node B,<br>value2—&gt;Node C  value3、<br>value4—&gt;Node A</p>
 <p>这样删除或者新增一个服务器则影响的范围不会很大，但是仍然有一个问题，就是分布不够均衡。这里引入了虚拟节点来处理。假设一个node有100个虚拟节点，先将value映射到virtual node,然后再映射到node。图就不画了，自己脑补。虚拟节点的计算：hash(node.ip #1) ,hash(node.ip #2)。</p>
 <h3 id="代码实现">代码实现</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#10;public class ConsistentHash&#60;T&#62; &#123;&#10;&#10;    private final HashFunction hashFunction;//hash&#31639;&#27861;&#10;    private final int numberOfReplicas;//&#34394;&#25311;&#33410;&#28857;&#25968;&#10;    private final SortedMap&#60;Integer, T&#62; circle = new TreeMap&#60;Integer, T&#62;();&#10;&#10;    public ConsistentHash(HashFunction hashFunction, int numberOfReplicas, Collection&#60;T&#62; nodes) &#123;&#10;        this.hashFunction = hashFunction;&#10;        this.numberOfReplicas = numberOfReplicas;&#10;&#10;        for (T node : nodes) &#123;&#10;            add(node);&#10;        &#125;&#10;    &#125;&#10;&#10;    public void add(T node) &#123;&#10;        for (int i = 0; i &#60; numberOfReplicas; i++) &#123;&#10;            circle.put(hashFunction.hash(node.toString() + i), node);&#10;        &#125;&#10;    &#125;&#10;&#10;    public void remove(T node) &#123;&#10;        for (int i = 0; i &#60; numberOfReplicas; i++) &#123;&#10;            circle.remove(hashFunction.hash(node.toString() + i));&#10;        &#125;&#10;    &#125;&#10;&#10;    public T get(Object key) &#123;&#10;        if (circle.isEmpty()) &#123;&#10;            return null;&#10;        &#125;&#10;        int hash = hashFunction.hash(key);&#10;        if (!circle.containsKey(hash)) &#123;&#10;            SortedMap&#60;Integer, T&#62; tailMap = circle.tailMap(hash);&#10;            hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();&#10;        &#125;&#10;        return circle.get(hash);&#10;    &#125;&#10;&#10;&#125;</span><br></pre></td></tr></table></figure>
@@ -152,7 +152,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="ciocwgw48000dkl32de4luiu6" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="ciocxc0jj000dzs32o3iwodak" class="article-share-link">Share</a>
       
       
     </footer>
@@ -212,7 +212,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="ciocwgw49000ekl32y8lvbryo" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="ciocxc0jk000ezs32dc0v2vtw" class="article-share-link">Share</a>
       
       
     </footer>
@@ -261,7 +261,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="ciocwgw3w0003kl32ndlqbnfw" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="ciocxc0j70003zs32n5xj5dna" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
@@ -308,7 +308,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="ciocwgw46000akl327re1cq40" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="ciocxc0jh000azs322ete2lk2" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
@@ -366,7 +366,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="ciocwgw420006kl32dc372wx1" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="ciocxc0jd0006zs32v5x2j5ly" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -420,7 +420,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="ciocwgw4b000fkl32ovgeii8l" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="ciocxc0jm000fzs32xfcggc2j" class="article-share-link">Share</a>
       
       
     </footer>
@@ -461,7 +461,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="ciocwgw450009kl32mrfggsna" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="ciocxc0jg0009zs32u6a94kvz" class="article-share-link">Share</a>
       
       
     </footer>
