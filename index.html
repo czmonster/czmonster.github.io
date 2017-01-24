@@ -88,7 +88,7 @@
   	</div>
     <div class="article-info profile-block">
       <div class="article-info-block">
-        9
+        10
         <span>posts</span>
       </div>
       <div class="article-info-block">
@@ -111,6 +111,110 @@
 </aside>
       
       <section id="main">
+      <article id="post-zookeeper学习" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/01/24/zookeeper学习/">zookeeper学习</a>
+    </h1>
+  
+
+        <div class="article-meta">
+          <div class="article-date">
+  <i class="fa fa-calendar"></i>
+  <a href="/2017/01/24/zookeeper学习/">
+    <time datetime="2017-01-24T06:31:59.000Z" itemprop="datePublished">2017-01-24</time>
+  </a>
+</div>
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/bdudcryslkm-neslihan-gunaydin.jpg" alt=""></p>
+<h2 id="应用">应用</h2><ul>
+<li><p>数据发布/订阅<br>适用于配置文件等数据量小、动态变化、各机器共享配置一致的场景。<br>将配置数据写在某个数据节点中、其他服务器用watcher监听。</p>
+</li>
+<li><p>负载均衡<br>动态DNS</p>
+</li>
+<li><p>服务命名</p>
+</li>
+<li><p>分布式协调/通知</p>
+</li>
+<li><p>集群管理</p>
+</li>
+<li><p>Master选举<br> 方式：抢占临时节点、抢不到的注册监听</p>
+</li>
+<li>分布式锁<ul>
+<li>排他锁 方式：抢占创建临时节点，抢不到的注册监听</li>
+<li>共享锁 方式：写临时顺序节点、比较。</li>
+</ul>
+</li>
+<li>分布式队列</li>
+</ul>
+<h2 id="数据结构">数据结构</h2><h3 id="事务ID_ZXID_64位数字_全局唯一_能识别执行顺序。">事务ID ZXID 64位数字 全局唯一 能识别执行顺序。</h3><h3 id="节点">节点</h3><p>ZNode、最小单元。</p>
+<ul>
+<li>持久节点 持久存在，除非主动删除。</li>
+<li>持久顺序节点 持久存在、并且有节点创建先后顺序。</li>
+<li>临时节点 临时存在，客户端断开则删除（非TCP连接断开）、只能作为叶子节点。</li>
+<li>临时顺序节点 同上、添加了顺序特性。</li>
+</ul>
+<p>节点状态信息 Stat</p>
+<h3 id="版本">版本</h3><p>version 当前数据节点数据内容的版本号（操作但若内容不变仍旧会增加版本号）<br>cversion 当前数据节点子节点的版本号<br>aversion 当前数据节点acl变更版本号</p>
+<p>通过版本号来保证数据原子性操作。乐观锁-CAS实现。更新前比较当前版本和预期版本是否一致。</p>
+<h3 id="Watcher_数据变更的通知">Watcher 数据变更的通知</h3><p>watchedEvent 逻辑事务。<br>watcherEvent 实现了序列化接口 用于网络传输。</p>
+<p>当节点的数据发生变更、服务端发送给客户端一个节点数据内容变更事件</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">KeeperState：SyncConnected</div><div class="line">EventType:NodeDataChanged</div><div class="line">Path:/zk-book</div></pre></td></tr></table></figure>
+<p><strong>变更前后的数据内容需要客户端主动去重新获取数据。</strong></p>
+<h3 id="ACL_保障数据的安全">ACL 保障数据的安全</h3><p>权限模式：Scheme</p>
+<ul>
+<li>IP  支持网段</li>
+<li>Digest  username：password</li>
+<li>World  anyone</li>
+<li>Super  超级用户</li>
+</ul>
+<p>权限： Permission</p>
+<ul>
+<li>CREATE(C)</li>
+<li>DELETE(D)</li>
+<li>READ(R)</li>
+<li>WRITE(W)</li>
+<li>ADMIN(A)</li>
+</ul>
+<h3 id="Api">Api</h3><ul>
+<li>原生：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">&lt;dependency&gt;</div><div class="line">    &lt;groupId&gt;org.apache.zookeeper&lt;/groupId&gt;</div><div class="line">    &lt;artifactId&gt;zookeeper&lt;/artifactId&gt;</div><div class="line">    &lt;version&gt;3.4.6&lt;/version&gt;</div><div class="line">&lt;/dependency&gt;</div></pre></td></tr></table></figure>
+<ul>
+<li>twitter ZkClient:</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">&lt;dependency&gt;</div><div class="line">    &lt;groupId&gt;com.github.sgroschupf&lt;/groupId&gt;</div><div class="line">    &lt;artifactId&gt;zkclient&lt;/artifactId&gt;</div><div class="line">    &lt;version&gt;0.1&lt;/version&gt;</div><div class="line">&lt;/dependency&gt;</div></pre></td></tr></table></figure>
+<ul>
+<li>Curator:</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">&lt;dependency&gt;</div><div class="line">    &lt;groupId&gt;org.apache.curator&lt;/groupId&gt;</div><div class="line">    &lt;artifactId&gt;curator-framework&lt;/artifactId&gt;</div><div class="line">    &lt;version&gt;3.2.1&lt;/version&gt;</div><div class="line">&lt;/dependency&gt;</div></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="ciyb5ht580000e532azu2kp40" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+    
       <article id="post-学习正则表达式" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -178,7 +282,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="ciy1h9iei000a1f32m015do2h" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="ciyb5ht5y000he532dbufrgvo" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -222,7 +326,7 @@
 <li>每个月阅读至少一本技术书籍。</li>
 <li>阅读研究Spring源码、了解并练习各种设计模式（不少于10种）</li>
 <li>关注性能调优方面的学习并积累</li>
-<li>技术博客更新12篇以上</li>
+<li>技术博客更新12篇以上，每月至少一篇。</li>
 </ol>
 <h3 id="生活篇">生活篇</h3><ol>
 <li>2+短期旅行</li>
@@ -240,7 +344,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="ciy1h9iek000d1f32gzz4vbja" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="ciyb5ht5w000ge5323hv3warp" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -290,7 +394,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="ciy1h9ie700041f32s25lpfkq" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="ciyb5ht5r0008e5326dngxr2a" class="article-share-link">Share</a>
       
       
     </footer>
@@ -350,7 +454,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="ciy1h9ie400021f329fncee11" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="ciyb5ht5o0007e5320khwct4k" class="article-share-link">Share</a>
       
       
     </footer>
@@ -399,7 +503,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="ciy1h9ieh00091f324tg0mo44" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="ciyb5ht5u000ce532qu430pqs" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
@@ -446,7 +550,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="ciy1h9ie900051f323wpe5xkf" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="ciyb5ht5l0005e5322h5awdea" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
@@ -504,7 +608,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="ciy1h9ieg00081f32m7htjsht" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="ciyb5ht5v000de53214jf3twc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -558,7 +662,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="ciy1h9idz00001f32nkzlk65p" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="ciyb5ht5d0002e5327ex7lqnr" class="article-share-link">Share</a>
       
       
     </footer>
@@ -568,46 +672,9 @@
 
 
     
-      <article id="post-你好,Hexo" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/06/17/你好,Hexo/">你好,Hexo</a>
-    </h1>
-  
-
-        <div class="article-meta">
-          <div class="article-date">
-  <i class="fa fa-calendar"></i>
-  <a href="/2015/06/17/你好,Hexo/">
-    <time datetime="2015-06-17T14:08:18.000Z" itemprop="datePublished">2015-06-17</time>
-  </a>
-</div>
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1428954376791-d9ae785dfb2d.jpeg" alt=""><br>折腾了老半天，终于搭起来了！</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="ciy1h9iec00061f32ti0y06d7" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
+      <nav id="page-nav">
+        <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+      </nav>
     </section>
       
         <aside id="sidebar">
@@ -617,6 +684,24 @@
     <h3 class="widget-title">recents</h3>
     <div class="widget">
       <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              <a href="/2017/01/24/zookeeper学习/" class="thumbnail">
+  
+    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/bdudcryslkm-neslihan-gunaydin.jpg
+)" alt="zookeeper学习" class="thumbnail-image"></span>
+  
+</a>
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"></p>
+              <p class="item-title"><a href="/2017/01/24/zookeeper学习/" class="title">zookeeper学习</a></p>
+              <p class="item-date"><time datetime="2017-01-24T06:31:59.000Z" itemprop="datePublished">2017-01-24</time></p>
+            </div>
+          </li>
         
           <li>
             
@@ -690,24 +775,6 @@
             </div>
           </li>
         
-          <li>
-            
-            <div class="item-thumbnail">
-              <a href="/2015/09/27/唯一约束和唯一索引/" class="thumbnail">
-  
-    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/photo-1438109519352-a52c41243c1a.jpeg
-)" alt="唯一约束和唯一索引" class="thumbnail-image"></span>
-  
-</a>
-            </div>
-            
-            <div class="item-inner">
-              <p class="item-category"></p>
-              <p class="item-title"><a href="/2015/09/27/唯一约束和唯一索引/" class="title">唯一约束和唯一索引</a></p>
-              <p class="item-date"><time datetime="2015-09-27T03:16:22.000Z" itemprop="datePublished">2015-09-27</time></p>
-            </div>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -719,7 +786,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Coding-life/">Coding life</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/notes/">notes</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/oracle/">oracle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Coding-life/">Coding life</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/notes/">notes</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/oracle/">oracle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -728,7 +795,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
