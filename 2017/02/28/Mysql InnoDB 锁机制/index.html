@@ -3,14 +3,41 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Tag: python | Day Day Up</title>
+  <title>Mysql InnoDB 锁机制 | Day Day Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Day Day Up">
-<meta property="og:url" content="http://czmonster.github.io/hexo-theme-icarus/tags/python/index.html">
+  <meta name="description" content="一些概念MVCC (Multi-Version Concurrency Control) 好处：读不加锁，读写不冲突，增加系统并发效率。
+
+读操作分为快照读和当前读
+锁分为S锁(共享锁)和X锁(排它锁）
+隔离级别：
+Read uncommited 无应用场景。
+Read commited(RC) 读已提交，oracle默认级别。不可重复读，存在幻读。
+Repeatable Read(RR) 可重">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mysql InnoDB 锁机制">
+<meta property="og:url" content="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/index.html">
 <meta property="og:site_name" content="Day Day Up">
+<meta property="og:description" content="一些概念MVCC (Multi-Version Concurrency Control) 好处：读不加锁，读写不冲突，增加系统并发效率。
+
+读操作分为快照读和当前读
+锁分为S锁(共享锁)和X锁(排它锁）
+隔离级别：
+Read uncommited 无应用场景。
+Read commited(RC) 读已提交，oracle默认级别。不可重复读，存在幻读。
+Repeatable Read(RR) 可重">
+<meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/paykyb-8er8-ian-schneider.jpg">
+<meta property="og:updated_time" content="2017-02-28T10:51:50.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Day Day Up">
+<meta name="twitter:title" content="Mysql InnoDB 锁机制">
+<meta name="twitter:description" content="一些概念MVCC (Multi-Version Concurrency Control) 好处：读不加锁，读写不冲突，增加系统并发效率。
+
+读操作分为快照读和当前读
+锁分为S锁(共享锁)和X锁(排它锁）
+隔离级别：
+Read uncommited 无应用场景。
+Read commited(RC) 读已提交，oracle默认级别。不可重复读，存在幻读。
+Repeatable Read(RR) 可重">
+<meta name="twitter:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/paykyb-8er8-ian-schneider.jpg">
   
   
     <link rel="icon" href="/favicon.png">
@@ -110,47 +137,178 @@
   </div>
 </aside>
       
-      <section id="main">
-    <section class="archives-wrap">
-    <div class="archive-tag-wrap">
-      <span class="archive-tag">#python</span>
-    </div>
-    <div class="archives">
+      <section id="main"><article id="post-Mysql InnoDB 锁机制" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-      <article class="archive-article archive-type-代码生成项目">
-  <div class="archive-article-inner">
     
-    <div class="archive-article-thumbnail">
-      <a href="/2015/08/08/代码生成项目/" class="thumbnail">
-  
-    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/photo-1431578500526-4d9613015464%20.jpeg
-)" alt="代码生成项目" class="thumbnail-image"></span>
-  
-</a>
-    </div>
     
-    <header class="archive-article-header">
-      
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2015/08/08/代码生成项目/">代码生成项目</a>
+    <h1 class="article-title" itemprop="name">
+      Mysql InnoDB 锁机制
     </h1>
   
 
-      
-        <div class="archive-article-date">
+        <div class="article-meta">
+          <div class="article-date">
   <i class="fa fa-calendar"></i>
-  <a href="/2015/08/08/代码生成项目/">
-    <time datetime="2015-08-08T07:31:53.000Z" itemprop="datePublished">2015 Aug 8</time>
+  <a href="/2017/02/28/Mysql InnoDB 锁机制/">
+    <time datetime="2017-02-28T10:46:12.000Z" itemprop="datePublished">2017-02-28</time>
   </a>
 </div>
-      
-    </header>
-  </div>
-</article>
+          
+        </div>
+      </header>
     
-    </div></section>
-    </section>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/paykyb-8er8-ian-schneider.jpg" alt=""></p>
+<h3 id="一些概念">一些概念</h3><p>MVCC (Multi-Version Concurrency Control) 好处：读不加锁，读写不冲突，增加系统并发效率。</p>
+<ul>
+<li>读操作分为<strong>快照读</strong>和<strong>当前读</strong></li>
+<li>锁分为<strong>S锁</strong>(共享锁)和<strong>X锁</strong>(排它锁）</li>
+<li>隔离级别：<ul>
+<li>Read uncommited 无应用场景。</li>
+<li>Read commited(RC) 读已提交，oracle默认级别。不可重复读，存在幻读。</li>
+<li>Repeatable Read(RR) 可重复读，不存在幻读，mysql默认级别。</li>
+<li>Serializable 性能影响太大，基本不使用。</li>
+</ul>
+</li>
+<li>锁分类：<ul>
+<li>Record lock 行锁</li>
+<li>Gap lock 范围锁</li>
+<li>Next-key lock（行锁+范围锁）</li>
+</ul>
+</li>
+</ul>
+<h3 id="RC和RR的快照读不同">RC和RR的快照读不同</h3><p>RC的快照读是读取最新一个快照的数据，所以在一个事务里如果多次读同一行，可能其他读到其他事务修改过后的数据。时间顺序如下</p>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>会话1</th>
+<th>会话2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>事务开始</td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td>select * from table where id =1；</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td></td>
+<td>事务开始</td>
+</tr>
+<tr>
+<td>4</td>
+<td></td>
+<td>update table set id=3 where id=1;</td>
+</tr>
+<tr>
+<td>5</td>
+<td>select * from table where id =1；</td>
+<td></td>
+</tr>
+<tr>
+<td>6</td>
+<td></td>
+<td>事务提交</td>
+</tr>
+<tr>
+<td>7</td>
+<td>select * from table where id =1；</td>
+<td></td>
+</tr>
+<tr>
+<td>8</td>
+<td>事务提交</td>
+</tr>
+</tbody>
+</table>
+<p>对于RC来说，2、5读到一条记录，7则读到0条记录。因为读的都是<strong>最新</strong>的快照<br>对于RR来说，2，5，7都是读到同一条记录。因为读的都是<strong>事务开始时</strong>的快照</p>
+<h3 id="解决幻读">解决幻读</h3><p>InnoDB存储引擎在RR隔离级别已经避免了幻读，而Oracle只有在SERIALIZABLE才能解决。<br>现有表a,数据1，3，6</p>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>会话1</th>
+<th>会话2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>事务开始</td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td>select * from a where id&gt;3 for update</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td></td>
+<td>事务开始</td>
+</tr>
+<tr>
+<td>4</td>
+<td></td>
+<td>insert into a select 4;</td>
+</tr>
+<tr>
+<td>5</td>
+<td></td>
+<td>事务提交</td>
+</tr>
+<tr>
+<td>6</td>
+<td>select * from a where id&gt;3 for update</td>
+</tr>
+</tbody>
+</table>
+<p>对于RC来说，次序2查出一条记录。次序6查出2两条记录。<br>对于RR来说，次序2查出一条记录。次序6同样只有一条记录，但是会话B会等待，直到会话1的事务提交（或者超时，曾发现线上有不少超时，分析后是这种情况）</p>
+<p>RC 只会对6这条记录加X锁。<br>RR 在对6这条记录加X锁的同时，在（3，+∞)加了X锁（Gap lock）</p>
+<h3 id="RR和RC的一些加锁分析">RR和RC的一些加锁分析</h3><p>如何加锁主要和隔离级别和索引类型有关。组合很多，见：何老师的博客【<a href="http://hedengcheng.com/?p=771" target="_blank" rel="external">MySQL 加锁处理分析</a>】</p>
+<h4 id="参考">参考</h4><ul>
+<li><a href="http://hedengcheng.com/?p=771" target="_blank" rel="external">MySQL 加锁处理分析</a></li>
+<li>《MySQL技术内幕 InnoDB存储引擎第2版》</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/" data-id="cizpez7nq0000y732d9xioh9b" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mysql/">mysql</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2017/01/24/zookeeper学习/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">zookeeper学习</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
       
         <aside id="sidebar">
   

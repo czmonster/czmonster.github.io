@@ -88,11 +88,11 @@
   	</div>
     <div class="article-info profile-block">
       <div class="article-info-block">
-        10
+        11
         <span>posts</span>
       </div>
       <div class="article-info-block">
-        4
+        5
         <span>tags</span>
       </div>
     </div>
@@ -111,6 +111,167 @@
 </aside>
       
       <section id="main">
+      <article id="post-Mysql InnoDB 锁机制" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/02/28/Mysql InnoDB 锁机制/">Mysql InnoDB 锁机制</a>
+    </h1>
+  
+
+        <div class="article-meta">
+          <div class="article-date">
+  <i class="fa fa-calendar"></i>
+  <a href="/2017/02/28/Mysql InnoDB 锁机制/">
+    <time datetime="2017-02-28T10:46:12.000Z" itemprop="datePublished">2017-02-28</time>
+  </a>
+</div>
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/paykyb-8er8-ian-schneider.jpg" alt=""></p>
+<h3 id="一些概念">一些概念</h3><p>MVCC (Multi-Version Concurrency Control) 好处：读不加锁，读写不冲突，增加系统并发效率。</p>
+<ul>
+<li>读操作分为<strong>快照读</strong>和<strong>当前读</strong></li>
+<li>锁分为<strong>S锁</strong>(共享锁)和<strong>X锁</strong>(排它锁）</li>
+<li>隔离级别：<ul>
+<li>Read uncommited 无应用场景。</li>
+<li>Read commited(RC) 读已提交，oracle默认级别。不可重复读，存在幻读。</li>
+<li>Repeatable Read(RR) 可重复读，不存在幻读，mysql默认级别。</li>
+<li>Serializable 性能影响太大，基本不使用。</li>
+</ul>
+</li>
+<li>锁分类：<ul>
+<li>Record lock 行锁</li>
+<li>Gap lock 范围锁</li>
+<li>Next-key lock（行锁+范围锁）</li>
+</ul>
+</li>
+</ul>
+<h3 id="RC和RR的快照读不同">RC和RR的快照读不同</h3><p>RC的快照读是读取最新一个快照的数据，所以在一个事务里如果多次读同一行，可能其他读到其他事务修改过后的数据。时间顺序如下</p>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>会话1</th>
+<th>会话2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>事务开始</td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td>select * from table where id =1；</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td></td>
+<td>事务开始</td>
+</tr>
+<tr>
+<td>4</td>
+<td></td>
+<td>update table set id=3 where id=1;</td>
+</tr>
+<tr>
+<td>5</td>
+<td>select * from table where id =1；</td>
+<td></td>
+</tr>
+<tr>
+<td>6</td>
+<td></td>
+<td>事务提交</td>
+</tr>
+<tr>
+<td>7</td>
+<td>select * from table where id =1；</td>
+<td></td>
+</tr>
+<tr>
+<td>8</td>
+<td>事务提交</td>
+</tr>
+</tbody>
+</table>
+<p>对于RC来说，2、5读到一条记录，7则读到0条记录。因为读的都是<strong>最新</strong>的快照<br>对于RR来说，2，5，7都是读到同一条记录。因为读的都是<strong>事务开始时</strong>的快照</p>
+<h3 id="解决幻读">解决幻读</h3><p>InnoDB存储引擎在RR隔离级别已经避免了幻读，而Oracle只有在SERIALIZABLE才能解决。<br>现有表a,数据1，3，6</p>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>会话1</th>
+<th>会话2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>事务开始</td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td>select * from a where id&gt;3 for update</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td></td>
+<td>事务开始</td>
+</tr>
+<tr>
+<td>4</td>
+<td></td>
+<td>insert into a select 4;</td>
+</tr>
+<tr>
+<td>5</td>
+<td></td>
+<td>事务提交</td>
+</tr>
+<tr>
+<td>6</td>
+<td>select * from a where id&gt;3 for update</td>
+</tr>
+</tbody>
+</table>
+<p>对于RC来说，次序2查出一条记录。次序6查出2两条记录。<br>对于RR来说，次序2查出一条记录。次序6同样只有一条记录，但是会话B会等待，直到会话1的事务提交（或者超时，曾发现线上有不少超时，分析后是这种情况）</p>
+<p>RC 只会对6这条记录加X锁。<br>RR 在对6这条记录加X锁的同时，在（3，+∞)加了X锁（Gap lock）</p>
+<h3 id="RR和RC的一些加锁分析">RR和RC的一些加锁分析</h3><p>如何加锁主要和隔离级别和索引类型有关。组合很多，见：何老师的博客【<a href="http://hedengcheng.com/?p=771" target="_blank" rel="external">MySQL 加锁处理分析</a>】</p>
+<h4 id="参考">参考</h4><ul>
+<li><a href="http://hedengcheng.com/?p=771" target="_blank" rel="external">MySQL 加锁处理分析</a></li>
+<li>《MySQL技术内幕 InnoDB存储引擎第2版》</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/" data-id="cizpez7nq0000y732d9xioh9b" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mysql/">mysql</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+    
       <article id="post-zookeeper学习" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -203,7 +364,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="ciyb5ht580000e532azu2kp40" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="cizpez7o50004y732c5mkevoh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -282,7 +443,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="ciyb5ht5y000he532dbufrgvo" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="cizpez7oj000dy732iy0s8k55" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -344,7 +505,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="ciyb5ht5w000ge5323hv3warp" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="cizpez7oi000ay7328cxhisfs" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -394,7 +555,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="ciyb5ht5r0008e5326dngxr2a" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="cizpez7o80005y732fjwzwd4s" class="article-share-link">Share</a>
       
       
     </footer>
@@ -454,7 +615,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="ciyb5ht5o0007e5320khwct4k" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cizpez7nv0001y732zp6gsjfg" class="article-share-link">Share</a>
       
       
     </footer>
@@ -503,7 +664,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="ciyb5ht5u000ce532qu430pqs" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cizpez7oo000hy732s7vmrswu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
@@ -550,7 +711,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="ciyb5ht5l0005e5322h5awdea" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cizpez7ob0008y73235fhys4b" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
@@ -608,63 +769,11 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="ciyb5ht5v000de53214jf3twc" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/19/关于最近工作中的一点反思/" data-id="cizpez7ol000ey732ko3vtfub" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
 
-    </footer>
-  </div>
-  
-</article>
-
-
-    
-      <article id="post-Mac 配置 oracle instant client" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/07/11/Mac 配置 oracle instant client/">配置 oracle instant client</a>
-    </h1>
-  
-
-        <div class="article-meta">
-          <div class="article-date">
-  <i class="fa fa-calendar"></i>
-  <a href="/2015/07/11/Mac 配置 oracle instant client/">
-    <time datetime="2015-07-11T08:08:18.000Z" itemprop="datePublished">2015-07-11</time>
-  </a>
-</div>
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="需要安装包：">需要安装包：</h3><ul>
-<li>instantclient-basic-macos</li>
-<li>instantclient-sdk-macos</li>
-<li>instantclient-sqlplus-macos</li>
-</ul>
-<h3 id="解压缩至：/opt/oracle/instantclient_11_2/">解压缩至：/opt/oracle/instantclient_11_2/</h3><h3 id="添加至_~/-zshrc">添加至 ~/.zshrc</h3><pre><code><span class="built_in">export</span> ORACLE_HOME=/opt/oracle/instantclient_11_2/
-<span class="built_in">export</span> DYLD_LIBRARY_PATH=<span class="variable">$ORACLE_HOME</span>
-<span class="built_in">export</span> SQLPATH=<span class="variable">$ORACLE_HOME</span>
-<span class="built_in">export</span> TNS_ADMIN=<span class="variable">$ORACLE_HOME</span>/network/admin
-<span class="built_in">export</span> NLS_DATE_FORMAT=<span class="string">"yyyy-mm-dd HH24:MI:SS"</span>
-
-<span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$ORACLE_HOME</span>:.
-</code></pre>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/07/11/Mac 配置 oracle instant client/" data-id="ciyb5ht5d0002e5327ex7lqnr" class="article-share-link">Share</a>
-      
-      
     </footer>
   </div>
   
@@ -684,6 +793,24 @@
     <h3 class="widget-title">recents</h3>
     <div class="widget">
       <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              <a href="/2017/02/28/Mysql InnoDB 锁机制/" class="thumbnail">
+  
+    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/paykyb-8er8-ian-schneider.jpg
+)" alt="Mysql InnoDB 锁机制" class="thumbnail-image"></span>
+  
+</a>
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"></p>
+              <p class="item-title"><a href="/2017/02/28/Mysql InnoDB 锁机制/" class="title">Mysql InnoDB 锁机制</a></p>
+              <p class="item-date"><time datetime="2017-02-28T10:46:12.000Z" itemprop="datePublished">2017-02-28</time></p>
+            </div>
+          </li>
         
           <li>
             
@@ -757,24 +884,6 @@
             </div>
           </li>
         
-          <li>
-            
-            <div class="item-thumbnail">
-              <a href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" class="thumbnail">
-  
-    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/photo-1448814100339-234df1d4005d.jpeg
-)" alt="Nginx实现对gzip压缩过的request进行解压缩" class="thumbnail-image"></span>
-  
-</a>
-            </div>
-            
-            <div class="item-inner">
-              <p class="item-category"></p>
-              <p class="item-title"><a href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" class="title">Nginx实现对gzip压缩过的request进行解压缩</a></p>
-              <p class="item-date"><time datetime="2016-01-11T15:06:54.000Z" itemprop="datePublished">2016-01-11</time></p>
-            </div>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -786,7 +895,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Coding-life/">Coding life</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/notes/">notes</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/oracle/">oracle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Coding-life/">Coding life</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/notes/">notes</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/oracle/">oracle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -795,7 +904,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
