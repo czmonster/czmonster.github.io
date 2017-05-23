@@ -137,11 +137,11 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1460500063983-994d4c27756c.jpeg" alt=""><br>在分布式应用当中少不了分布式锁，这里讲一讲用zookeeper和redis去实现。</p>
-<h3 id="zookeeper">zookeeper</h3><p><strong>非公平锁</strong><br>1、所有客户端尝试创建’/lock’临时子节点，zk会保证最终只有一个客户端创建成功，那么认为该客户端获取了锁。其他没有获取到的客户端监听该节点的变更情况。<br>2、若获得该锁的客户端断开连接或者主动去删除该节点，则zk会通知所有监听该子几点变更的客户端，这些客户端收到变更事件以后去发起获取锁的过程（重复获取锁过程）</p>
-<p>这种最大的问题是如果并发过多，注册的watcher太多，释放时会通知所有客户端去抢占，性能上不是很友好。会有‘羊群效应’。</p>
+        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1460500063983-994d4c27756c.jpeg" alt=""><br>在分布式应用当中少不了分布式锁，这里讲一讲用zookeeper和redis实现。</p>
+<h3 id="zookeeper">zookeeper</h3><p><strong>非公平锁</strong><br>1、所有客户端尝试创建’/lock’临时子节点，zk会保证最终只有一个客户端创建成功，那么认为该客户端获取了锁。其他没有获取到的客户端监听该节点的变更情况。<br>2、若获得该锁的客户端断开连接或者主动去删除该节点，则zk会通知所有监听该子节点变更的客户端，这些客户端收到变更事件以后去发起获取锁的过程（重复获取锁过程）</p>
+<p>这种最大的问题是如果并发过多，注册的watcher太多，释放时会通知所有客户端去抢占，性能上不是很友好。会有’羊群效应’。</p>
 <p><strong>公平锁</strong><br>公平锁与非公平锁最大的区别在于在第一步是创建临时顺序子节点，创建后调用getChildren接口获取所有子节点列表，判断自己是否是所有子节点中序号最小的，如果是则获得锁，如果不是，则去监听比自己序号小的那个节点的变更情况即可。</p>
-<p>项目中一般不自己去实现，用现成的工具。如在curator包里的【InterProcessMutex】<br>以前只是简单的思想，还有更复杂的读写锁等。</p>
+<p>项目中一般不自己去实现，用现成的工具。如在curator包里的【InterProcessMutex】<br>以上只是简单的思想，还有更复杂的读写锁实现等。</p>
 <h3 id="redis">redis</h3><p>基本命令：</p>
 <ul>
 <li>setNX （SET if Not eXists）设置成功，返回1，设置失败，返回0.</li>
@@ -158,7 +158,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/05/23/分布式锁实现/" data-id="cj31prwgn0009npdm8pd4qnfc" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/05/23/分布式锁实现/" data-id="cj31pzrmt0009rndmcnzek2rr" class="article-share-link">Share</a>
       
       
     </footer>
@@ -209,7 +209,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/04/20/重回城西/" data-id="cj31prwgx000knpdmubcbmveg" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/04/20/重回城西/" data-id="cj31pzrn1000lrndmf9taidus" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -370,7 +370,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/" data-id="cj31prwg60001npdmns934oad" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/" data-id="cj31pzrmf0002rndm7dawxknf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mysql/">mysql</a></li></ul>
@@ -474,7 +474,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="cj31prwgf0004npdme5ys68sc" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="cj31pzrmq0007rndm9lcm9m3h" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -553,7 +553,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="cj31prwgt000gnpdm4nehbupe" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="cj31pzrmy000hrndmowlbqrq6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -615,7 +615,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="cj31prwgv000inpdmvcjt5y9j" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="cj31pzrn2000nrndmcjnjgze9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -665,7 +665,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="cj31prwgh0005npdmamyckp6w" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="cj31pzrms0008rndm57ri6fyz" class="article-share-link">Share</a>
       
       
     </footer>
@@ -725,7 +725,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cj31prwg90002npdm2w8o883k" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cj31pzrmi0004rndmod9555pw" class="article-share-link">Share</a>
       
       
     </footer>
@@ -774,7 +774,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cj31prwgq000cnpdm5ne7t95y" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cj31pzrmz000irndm9d57yd8e" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
