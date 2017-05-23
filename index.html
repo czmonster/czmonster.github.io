@@ -88,7 +88,7 @@
   	</div>
     <div class="article-info profile-block">
       <div class="article-info-block">
-        12
+        13
         <span>posts</span>
       </div>
       <div class="article-info-block">
@@ -111,6 +111,63 @@
 </aside>
       
       <section id="main">
+      <article id="post-分布式锁实现" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/05/23/分布式锁实现/">分布式锁实现</a>
+    </h1>
+  
+
+        <div class="article-meta">
+          <div class="article-date">
+  <i class="fa fa-calendar"></i>
+  <a href="/2017/05/23/分布式锁实现/">
+    <time datetime="2017-05-23T12:41:23.000Z" itemprop="datePublished">2017-05-23</time>
+  </a>
+</div>
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1460500063983-994d4c27756c.jpeg" alt=""><br>在分布式应用当中少不了分布式锁，这里讲一讲用zookeeper和redis去实现。</p>
+<h3 id="zookeeper">zookeeper</h3><p><strong>非公平锁</strong><br>1、所有客户端尝试创建’/lock’临时子节点，zk会保证最终只有一个客户端创建成功，那么认为该客户端获取了锁。其他没有获取到的客户端监听该节点的变更情况。<br>2、若获得该锁的客户端断开连接或者主动去删除该节点，则zk会通知所有监听该子几点变更的客户端，这些客户端收到变更事件以后去发起获取锁的过程（重复获取锁过程）</p>
+<p>这种最大的问题是如果并发过多，注册的watcher太多，释放时会通知所有客户端去抢占，性能上不是很友好。会有‘羊群效应’。</p>
+<p><strong>公平锁</strong><br>公平锁与非公平锁最大的区别在于在第一步是创建临时顺序子节点，创建后调用getChildren接口获取所有子节点列表，判断自己是否是所有子节点中序号最小的，如果是则获得锁，如果不是，则去监听比自己序号小的那个节点的变更情况即可。</p>
+<p>项目中一般不自己去实现，用现成的工具。如在curator包里的【InterProcessMutex】<br>以前只是简单的思想，还有更复杂的读写锁等。</p>
+<h3 id="redis">redis</h3><p>基本命令：</p>
+<ul>
+<li>setNX （SET if Not eXists）设置成功，返回1，设置失败，返回0.</li>
+<li>getSET（） 将给定key的值设置为value，并返回key的旧值（old value）.当key不存在时，返回nil</li>
+<li>get </li>
+</ul>
+<p>redis为单进程单线程模式，并发访问不存在竞争关系。<br>1、用 SETNX lock.xxx  <current time="">，若返回1则获取锁，若返回0则需要等待重试。<br>2、获取锁的客户端用del命令删除进行释放。<br>这种最大的问题在于如果客户端线程被kill或者其他原因挂掉锁不会被释放。造成死锁。<br>那么可以这样改进。</current></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">1、c0 SETNX lock.xxx 时间戳</div><div class="line">2、c1、c2获取锁失败后用GET读取检查时间戳。发现超时了。</div><div class="line">3、c1发送 DEL </div><div class="line">4、c1发送 SETNX （c1获取锁）</div><div class="line">5、c2发送 DEL</div><div class="line">6、c2发送 SETNX （c2获取锁）</div></pre></td></tr></table></figure>
+<p>这种解决了死锁问题，但是带来了新的问题。c1和c2都获取到锁了。<br>那么再改进。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">1、c0 SETNX lock.xxx 时间戳</div><div class="line">2、c1、c2获取锁失败后用GET读取检查时间戳。发现超时了。</div><div class="line">3、c1用GETSET lock.xxx 新的时间戳 获取到旧的时间戳，如果和2的拿到的时间戳一致则说明获取成功则当做获取锁。</div><div class="line">4、c2用GETSET lock.xxx 新的时间戳 获取到旧的时间戳，发现和2拿到的时间戳不一致则说明获取失败，则再等待重试。</div></pre></td></tr></table></figure>
+<p>如此解决了多客户端拿到锁的问题，但是在操作4时，更改了c1设置的时间戳，影响可以忽略不计。</p>
+<p>redis也有线程的实现类。如Redisson的【RedissonLock】。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/05/23/分布式锁实现/" data-id="cj31prwgn0009npdm8pd4qnfc" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+    
       <article id="post-重回城西" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -152,7 +209,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/04/20/重回城西/" data-id="cj1qg4t63000ebx328ljnergg" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/04/20/重回城西/" data-id="cj31prwgx000knpdmubcbmveg" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -313,7 +370,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/" data-id="cj1qg4t5w0008bx3239vj8un2" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/" data-id="cj31prwg60001npdmns934oad" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mysql/">mysql</a></li></ul>
@@ -417,7 +474,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="cj1qg4t5k0002bx32y9cc0ev5" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="cj31prwgf0004npdme5ys68sc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -496,7 +553,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="cj1qg4t62000dbx320166dcc4" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="cj31prwgt000gnpdm4nehbupe" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -558,7 +615,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="cj1qg4t6a000lbx32spo3aiyf" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="cj31prwgv000inpdmvcjt5y9j" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -608,7 +665,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="cj1qg4t5v0007bx3234r9bvsh" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="cj31prwgh0005npdmamyckp6w" class="article-share-link">Share</a>
       
       
     </footer>
@@ -668,7 +725,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cj1qg4t5e0000bx32ma4sdyh8" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cj31prwg90002npdm2w8o883k" class="article-share-link">Share</a>
       
       
     </footer>
@@ -717,57 +774,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cj1qg4t67000jbx32t2zepsxd" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cj31prwgq000cnpdm5ne7t95y" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-    
-      <article id="代码生成项目-代码生成项目" class="article article-type-代码生成项目" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/08/08/代码生成项目/">代码生成项目</a>
-    </h1>
-  
-
-        <div class="article-meta">
-          <div class="article-date">
-  <i class="fa fa-calendar"></i>
-  <a href="/2015/08/08/代码生成项目/">
-    <time datetime="2015-08-08T07:31:53.000Z" itemprop="datePublished">2015-08-08</time>
-  </a>
-</div>
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1431578500526-4d9613015464%20.jpeg" alt=""></p>
-<p>纯粹是为了学习Python才有了这么一个小项目。</p>
-<p>这个项目就是一个简单的代码生成项目,在JAVA开发中,有很多“神似”的代码,没有什么营养,于是就用代码生成去生成这些代码。</p>
-<p>一个月前已经把大部分功能完善了,只不过今天才最后修修补补完成。因为只是为了学习Python,功能很简单。</p>
-<p>直接贴地址:<a href="https://github.com/czmonster/code_generator" target="_blank" rel="external">Code_Generate</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/08/08/代码生成项目/" data-id="cj1qg4t5x0009bx32drs26rxj" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
 
     </footer>
   </div>
@@ -788,6 +798,24 @@
     <h3 class="widget-title">recents</h3>
     <div class="widget">
       <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              <a href="/2017/05/23/分布式锁实现/" class="thumbnail">
+  
+    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/photo-1460500063983-994d4c27756c.jpeg
+)" alt="分布式锁实现" class="thumbnail-image"></span>
+  
+</a>
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"></p>
+              <p class="item-title"><a href="/2017/05/23/分布式锁实现/" class="title">分布式锁实现</a></p>
+              <p class="item-date"><time datetime="2017-05-23T12:41:23.000Z" itemprop="datePublished">2017-05-23</time></p>
+            </div>
+          </li>
         
           <li>
             
@@ -861,24 +889,6 @@
             </div>
           </li>
         
-          <li>
-            
-            <div class="item-thumbnail">
-              <a href="/2017/01/10/目标/" class="thumbnail">
-  
-    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/gpnovprp0s8-saksham-gangwar.jpg
-)" alt="2017 年度目标" class="thumbnail-image"></span>
-  
-</a>
-            </div>
-            
-            <div class="item-inner">
-              <p class="item-category"></p>
-              <p class="item-title"><a href="/2017/01/10/目标/" class="title">2017 年度目标</a></p>
-              <p class="item-date"><time datetime="2017-01-10T12:05:21.000Z" itemprop="datePublished">2017-01-10</time></p>
-            </div>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -899,7 +909,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
