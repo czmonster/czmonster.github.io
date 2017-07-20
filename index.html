@@ -88,7 +88,7 @@
   	</div>
     <div class="article-info profile-block">
       <div class="article-info-block">
-        14
+        15
         <span>posts</span>
       </div>
       <div class="article-info-block">
@@ -111,6 +111,58 @@
 </aside>
       
       <section id="main">
+      <article id="post-springboot中使用jestclient" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/07/20/springboot中使用jestclient/">springboot中使用jestclient</a>
+    </h1>
+  
+
+        <div class="article-meta">
+          <div class="article-date">
+  <i class="fa fa-calendar"></i>
+  <a href="/2017/07/20/springboot中使用jestclient/">
+    <time datetime="2017-07-20T14:20:41.000Z" itemprop="datePublished">2017-07-20</time>
+  </a>
+</div>
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/jamison-mcandie-112375.jpg" alt=""><br>在项目里需要用到elasticsearch，发现框架组并没有提供封装好的api。一开始选择使用了spring-boot-starter-data-elasticsearch，后来发现测试发现公司的es外面有一层代理，不能直连，只能通过http请求。幸好发现了jestclient。</p>
+<p>EsConfig:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">@Configuration</div><div class="line">public class EsConfig &#123;</div><div class="line"></div><div class="line">    @Value(&quot;$&#123;spring.elasticsearch.jest.uris&#125;&quot;)</div><div class="line">    private String esSearchUrl;</div><div class="line"></div><div class="line">    @Bean</div><div class="line">    public HttpClientConfig searchHttpClientConfig() &#123;</div><div class="line">        // Jest的解析是用gson、用自己定义的gson解析策略。主要考虑es是字段是蛇底式命名规则、而java的实体对象是用驼峰命名。</div><div class="line">        Gson gson = new GsonBuilder()</div><div class="line">                .setDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;)</div><div class="line">                .registerTypeAdapter(Date.class,new GsonDateDeserializer())</div><div class="line">                .registerTypeAdapter(Date.class,new GsonDateSerializer())</div><div class="line">                .enableComplexMapKeySerialization()</div><div class="line">                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES) //下划线驼峰转换策略</div><div class="line">                .create();</div><div class="line">        return new HttpClientConfig.Builder(esSearchUrl).multiThreaded(true).gson(gson).build();</div><div class="line">    &#125;</div><div class="line"></div><div class="line"></div><div class="line">    @Bean</div><div class="line">    public JestClient searchJestClient() &#123;</div><div class="line">        JestClientFactory factory = new JestClientFactory();</div><div class="line">        factory.setHttpClientConfig(searchHttpClientConfig());</div><div class="line">        return factory.getObject();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>由于es里字段是蛇底式命名规则，而java的是驼峰命名，所以在gson的命名策略上做了下处理。</li>
+<li>时间类型在es如果存的是long型，而在java里想用Date类型，就需要在类型转换上做下处理。是Gson这块的东西。需要实现JsonDeserializer<t>和JsonSerializer<t>类，不贴代码了。</t></t></li>
+</ul>
+<p>使用例子：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();</div><div class="line">searchSourceBuilder.size(10);</div><div class="line">searchSourceBuilder.sort(&quot;_id&quot;);</div><div class="line">searchSourceBuilder.query(QueryBuilders.termQuery(&quot;kdt_id&quot;, kdtId));</div><div class="line">Search search = new Search.Builder(searchSourceBuilder.toString()).addIndex(EsConstant.INDEX).addType(EsConstant.TYPE).build();</div><div class="line">SearchResult esResult = jestClient.execute(search);</div><div class="line">if (esResult == null) &#123;</div><div class="line">    return null;</div><div class="line">&#125;</div><div class="line">List&lt;SearchResult.Hit&lt;TeamES, Void&gt;&gt; hits = esResult.getHits(TeamES.class);</div><div class="line">...</div></pre></td></tr></table></figure>
+<p>更多的例子看<a href="https://github.com/searchbox-io/Jest/tree/master/jest" target="_blank" rel="external">官方文档</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/07/20/springboot中使用jestclient/" data-id="cj5cjvhjs0003jadmgbr61k7q" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/spring-boot/">spring boot</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+    
       <article id="post-springboot的localcache实现" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -152,7 +204,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/07/20/springboot的localcache实现/" data-id="cj5cir0u20004x6dm0rme95gi" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/07/20/springboot的localcache实现/" data-id="cj5cjvhk40008jadmv6up1mtu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/spring-boot/">spring boot</a></li></ul>
@@ -211,7 +263,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/05/23/分布式锁实现/" data-id="cj5cir0uj000ex6dmkbnsc17s" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/05/23/分布式锁实现/" data-id="cj5cjvhkf000njadmfhyij3ga" class="article-share-link">Share</a>
       
       
     </footer>
@@ -262,7 +314,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/04/20/重回城西/" data-id="cj5cir0ur000nx6dmjj7jw1ba" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/04/20/重回城西/" data-id="cj5cjvhkk000rjadmqjhkz6mg" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -423,7 +475,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/" data-id="cj5cir0u10003x6dmi3dlplcl" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/" data-id="cj5cjvhju0004jadmxr5dwzla" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mysql/">mysql</a></li></ul>
@@ -527,7 +579,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="cj5cir0uc0006x6dm9aadm3f9" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="cj5cjvhk30007jadmottoaxx3" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -606,7 +658,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="cj5cir0un000ix6dm0jrsfkdm" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="cj5cjvhke000ljadmcq19r7sm" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -668,7 +720,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="cj5cir0up000kx6dmc13dq6f4" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="cj5cjvhki000pjadmx08i3fu8" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -718,67 +770,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="cj5cir0ud0007x6dmmz0qs778" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-    
-      <article id="Nginx-Nginx实现对gzip压缩过的request进行解压缩" class="article article-type-Nginx" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/">Nginx实现对gzip压缩过的request进行解压缩</a>
-    </h1>
-  
-
-        <div class="article-meta">
-          <div class="article-date">
-  <i class="fa fa-calendar"></i>
-  <a href="/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/">
-    <time datetime="2016-01-11T15:06:54.000Z" itemprop="datePublished">2016-01-11</time>
-  </a>
-</div>
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1448814100339-234df1d4005d.jpeg" alt=""><br>好久没有写博客了，把之前在公司Wiki上写的一篇文章放下来。<br>场景：由于特殊需求，Client对request进行了gzip压缩。而原有的apache服务器在中间做了一次解压缩后传给了后台server（请求数据体积大，后台不支持处理压缩过的请求）。而最近准备用Nginx替换掉笨重的apache。查资料发现Nginx和压缩相关的有gzip和gunzip。不过在这里都用不上。</p>
-<ul>
-<li>gzip实现的功能有：对response进行压缩。</li>
-<li>gunzip实现的功能有：对response进行解压缩。(gunzip模块默认编译时并不安装)</li>
-</ul>
-<p>一番google之后发现nginx确实没有自带这样的功能…有介绍使用lua大法去解决这个问题…nginx lua模块安装参考<a href="">lua-nginx-module</a><br>用lua进行gzip压缩需要借助lua-zlib,C语言编写。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">cd /usr/local/src</div><div class="line">yum install git cmake</div><div class="line">git clone https://github.com/brimworks/lua-zlib.git</div><div class="line">cd lua-zlib/</div><div class="line">cmake -DLUA_INCLUDE_DIR=/usr/local/include/luajit-2.0 -DLUA_LIBRARIES=/usr/local/lib -DUSE_LUAJIT=ON -DUSE_LUA=OFF</div><div class="line">make &amp;&amp; make install</div></pre></td></tr></table></figure>
-<p>以下是lua脚本inflate.lua：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">local zlib = require &quot;zlib&quot;</div><div class="line">file = io.open(&quot;/etc/nginx/pos_data.txt&quot;,&quot;a&quot;)</div><div class="line">local encoding = ngx.req.get_headers()[&quot;Content-Encoding&quot;]</div><div class="line">	if encoding == &quot;gzip&quot; then</div><div class="line">	--这行一定不能漏，要不然下面获得的是个nil</div><div class="line">	ngx.req.read_body()</div><div class="line">	local body =ngx.req.get_body_data()</div><div class="line">	if body then</div><div class="line">		local stream = zlib.inflate()</div><div class="line">		uncompress = stream(body)</div><div class="line">		--file:write(uncompress)</div><div class="line">		ngx.req.set_body_data(uncompress)</div><div class="line">		ngx.req.clear_header(&quot;Content-Encoding&quot;)</div><div class="line">	end</div><div class="line">end</div><div class="line">file:close()</div></pre></td></tr></table></figure>
-<p>由于找不到合适的断点方式只好把一些过程数据写入到文件中了.注意：记得把文件权限打开..要不然写文件时会报错..<br>    2016/01/06 12:40:10 [error] 25988#0: *4 lua entry thread aborted: runtime error: /etc/nginx/inflate.lua:17: attempt to index global ‘file’ (a nil value)<br>上面写好了lua脚本，那么要在nginx中使用。修改nginx.conf :</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">location /XXX/ &#123;</div><div class="line">	proxy_pass http://ip:port;</div><div class="line">	rewrite_by_lua_file /etc/nginx/inflate.lua;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>测试异常，通过查看nginx的error.log是因为找不到zlib，怀疑是路径问题。需要把lua-zlib-master/zlib.so放到指定目录（我放在和inflate.la同目录下）然后测试通过。<br>之后又加了gzip对返回的response进行压缩处理（业务需求导致）完整的流程图：<br><img src="http://7xkc2a.com1.z0.glb.clouddn.com/image2016-1-6%2013-28-4.png" alt=""></p>
-<p>TODO：<br>性能测试、压力测试。</p>
-<p>参考资料:</p>
-<ul>
-<li><a href="http://huoding.com/2013/09/02/283" target="_blank" rel="external">http://huoding.com/2013/09/02/283</a></li>
-<li>关于nginx lua : <a href="http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html" target="_blank" rel="external">http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html</a></li>
-<li>关于nginx lua的各种api ：<a href="https://github.com/openresty/lua-nginx-module" target="_blank" rel="external">https://github.com/openresty/lua-nginx-module</a></li>
-<li>关于lua zlib ：<a href="https://github.com/brimworks/lua-zlib" target="_blank" rel="external">https://github.com/brimworks/lua-zlib</a></li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cj5cir0ty0002x6dm3rui64m7" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="cj5cjvhk5000bjadmsjrxif0o" class="article-share-link">Share</a>
       
       
     </footer>
@@ -800,6 +792,24 @@
     <h3 class="widget-title">recents</h3>
     <div class="widget">
       <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              <a href="/2017/07/20/springboot中使用jestclient/" class="thumbnail">
+  
+    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/jamison-mcandie-112375.jpg
+)" alt="springboot中使用jestclient" class="thumbnail-image"></span>
+  
+</a>
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"></p>
+              <p class="item-title"><a href="/2017/07/20/springboot中使用jestclient/" class="title">springboot中使用jestclient</a></p>
+              <p class="item-date"><time datetime="2017-07-20T14:20:41.000Z" itemprop="datePublished">2017-07-20</time></p>
+            </div>
+          </li>
         
           <li>
             
@@ -873,24 +883,6 @@
             </div>
           </li>
         
-          <li>
-            
-            <div class="item-thumbnail">
-              <a href="/2017/01/24/zookeeper学习/" class="thumbnail">
-  
-    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/bdudcryslkm-neslihan-gunaydin.jpg
-)" alt="zookeeper学习" class="thumbnail-image"></span>
-  
-</a>
-            </div>
-            
-            <div class="item-inner">
-              <p class="item-category"></p>
-              <p class="item-title"><a href="/2017/01/24/zookeeper学习/" class="title">zookeeper学习</a></p>
-              <p class="item-date"><time datetime="2017-01-24T06:31:59.000Z" itemprop="datePublished">2017-01-24</time></p>
-            </div>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -902,7 +894,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Coding-life/">Coding life</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/notes/">notes</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/oracle/">oracle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/spring-boot/">spring boot</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Coding-life/">Coding life</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/notes/">notes</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/oracle/">oracle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/spring-boot/">spring boot</a><span class="tag-list-count">2</span></li></ul>
     </div>
   </div>
 
@@ -911,7 +903,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
