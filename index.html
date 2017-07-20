@@ -88,11 +88,11 @@
   	</div>
     <div class="article-info profile-block">
       <div class="article-info-block">
-        13
+        14
         <span>posts</span>
       </div>
       <div class="article-info-block">
-        5
+        6
         <span>tags</span>
       </div>
     </div>
@@ -111,6 +111,59 @@
 </aside>
       
       <section id="main">
+      <article id="post-springboot的localcache实现" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/07/20/springboot的localcache实现/">springboot的localcache实现</a>
+    </h1>
+  
+
+        <div class="article-meta">
+          <div class="article-date">
+  <i class="fa fa-calendar"></i>
+  <a href="/2017/07/20/springboot的localcache实现/">
+    <time datetime="2017-07-20T13:48:42.000Z" itemprop="datePublished">2017-07-20</time>
+  </a>
+</div>
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/syx3uchzjlo-ethan-robertson.jpg" alt=""></p>
+<p>使用的是spring boot的cache模块，封装得很好。—&gt;<a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-caching.html#boot-features-caching-provider-guava" target="_blank" rel="external">官方文档</a></p>
+<p>原先接入的是redis,后来考虑到性能和场景可能localcache更加合适。所以就打算用guava去实现，后来发现guava cache已经被spring所抛弃，替代的是一个叫caffeine的东东，支持java8。在性能和ttl算法上caffeine更优。<br>使用caffeine的方式和其他cache没什么差别，结合注解。直接贴代码。</p>
+<p>pom.xml:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">&lt;dependency&gt;</div><div class="line">    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</div><div class="line">    &lt;artifactId&gt;spring-boot-starter-cache&lt;/artifactId&gt;</div><div class="line">&lt;/dependency&gt;</div><div class="line"></div><div class="line">&lt;dependency&gt;</div><div class="line">    &lt;groupId&gt;com.github.ben-manes.caffeine&lt;/groupId&gt;</div><div class="line">    &lt;artifactId&gt;caffeine&lt;/artifactId&gt;</div><div class="line">&lt;/dependency&gt;</div></pre></td></tr></table></figure>
+<p>CacheConfig.config:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">@Configuration</div><div class="line">@EnableCaching</div><div class="line">public class CacheConfig &#123;</div><div class="line"></div><div class="line"></div><div class="line">    static final int DEFAULT_MAXSIZE = 50000; // 5w条</div><div class="line">    static final int DEFAULT_TTL = 7200; // 2小时</div><div class="line"></div><div class="line">    /**</div><div class="line">     * 每个cache缺省：3600秒超时、最多缓存50000条数据，需要修改可以在构造方法的参数中指定。</div><div class="line">     */</div><div class="line">    public enum Caches &#123;</div><div class="line">        OA_USER(21600), // 有效期6小时</div><div class="line">        OA_DEPARTMENT(43200), // 12小时</div><div class="line">        ;</div><div class="line"></div><div class="line">        Caches() &#123;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        Caches(int ttl) &#123;</div><div class="line">            this.ttl = ttl;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        Caches(int ttl, int maxSize) &#123;</div><div class="line">            this.ttl = ttl;</div><div class="line">            this.maxSize = maxSize;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        private int maxSize = DEFAULT_MAXSIZE;    //最大數量</div><div class="line"></div><div class="line">        private int ttl = DEFAULT_TTL;        //过期时间（秒）</div><div class="line"></div><div class="line">        public int getMaxSize() &#123;</div><div class="line">            return maxSize;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        public int getTtl() &#123;</div><div class="line">            return ttl;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    /**</div><div class="line">     * 创建基于Caffeine的Cache Manager</div><div class="line">     */</div><div class="line">    @Bean</div><div class="line">    @Primary</div><div class="line">    public CacheManager caffeineCacheManager() &#123;</div><div class="line">        SimpleCacheManager cacheManager = new SimpleCacheManager();</div><div class="line">        List&lt;CaffeineCache&gt; caches = new ArrayList&lt;&gt;();</div><div class="line">        for (Caches c : Caches.values()) &#123;</div><div class="line">            caches.add(new CaffeineCache(c.name(),</div><div class="line">                    Caffeine.newBuilder().recordStats()</div><div class="line">                            .expireAfterWrite(c.getTtl(), TimeUnit.SECONDS)</div><div class="line">                            .maximumSize(c.getMaxSize())</div><div class="line">                            .build())</div><div class="line">            );</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        cacheManager.setCaches(caches);</div><div class="line">        return cacheManager;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>使用：在方法上加注解@Cacheable</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">@Cacheable(value = &quot;OA_USER&quot;)</div><div class="line">public XXX methodXXX(Long id) &#123;</div><div class="line">    ... // get from db</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>缓存淘汰：在方法上加@CacheEvict<br>如果是分布式应用，就需要缓存淘汰广播。（后面有机会补。逃）</p>
+<p>补6月份的博客…太懒了</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/07/20/springboot的localcache实现/" data-id="cj5cir0u20004x6dm0rme95gi" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/spring-boot/">spring boot</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+    
       <article id="post-分布式锁实现" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -158,7 +211,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/05/23/分布式锁实现/" data-id="cj31pzrmt0009rndmcnzek2rr" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/05/23/分布式锁实现/" data-id="cj5cir0uj000ex6dmkbnsc17s" class="article-share-link">Share</a>
       
       
     </footer>
@@ -209,7 +262,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/04/20/重回城西/" data-id="cj31pzrn1000lrndmf9taidus" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/04/20/重回城西/" data-id="cj5cir0ur000nx6dmjj7jw1ba" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -370,7 +423,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/" data-id="cj31pzrmf0002rndm7dawxknf" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/02/28/Mysql InnoDB 锁机制/" data-id="cj5cir0u10003x6dmi3dlplcl" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mysql/">mysql</a></li></ul>
@@ -474,7 +527,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="cj31pzrmq0007rndm9lcm9m3h" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/24/zookeeper学习/" data-id="cj5cir0uc0006x6dm9aadm3f9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -553,7 +606,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="cj31pzrmy000hrndmowlbqrq6" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/17/学习正则表达式/" data-id="cj5cir0un000ix6dm0jrsfkdm" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/notes/">notes</a></li></ul>
@@ -615,7 +668,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="cj31pzrn2000nrndmcjnjgze9" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/01/10/目标/" data-id="cj5cir0up000kx6dmc13dq6f4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Coding-life/">Coding life</a></li></ul>
@@ -665,7 +718,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="cj31pzrms0008rndm57ri6fyz" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/05/18/一致性hash算法/" data-id="cj5cir0ud0007x6dmmz0qs778" class="article-share-link">Share</a>
       
       
     </footer>
@@ -725,60 +778,9 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cj31pzrmi0004rndmod9555pw" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2016/01/11/Nginx实现对gzip压缩过的request进行解压缩/" data-id="cj5cir0ty0002x6dm3rui64m7" class="article-share-link">Share</a>
       
       
-    </footer>
-  </div>
-  
-</article>
-
-
-    
-      <article id="post-唯一约束和唯一索引" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/09/27/唯一约束和唯一索引/">唯一约束和唯一索引</a>
-    </h1>
-  
-
-        <div class="article-meta">
-          <div class="article-date">
-  <i class="fa fa-calendar"></i>
-  <a href="/2015/09/27/唯一约束和唯一索引/">
-    <time datetime="2015-09-27T03:16:22.000Z" itemprop="datePublished">2015-09-27</time>
-  </a>
-</div>
-          
-        </div>
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1438109519352-a52c41243c1a.jpeg" alt=""><br>记录下之前生产发布出的一个事故，反思。<br>原因是因为业务变动，一张表的唯一约束需要干掉。发布前执行了DROP CONSTRAINT语句，之后数据库压力瞬间上来。因为这张表的是张大表，操作又频繁。而把删除唯一约束的同时把一个很关键的索引给干掉了。造成这起事故的最根本原因是对唯一约束和索引的认识不够。经过一系列的测试后，得出以下两个学习结果：</p>
-<ul>
-<li><strong>oracle在创建唯一约束的时会创建唯一索引，如果之前有索引则会使用之前存在的索引。</strong></li>
-<li><strong>在删除唯一约束时，oracle会级联删除oracle自动生成的唯一索引。如果这个索引是手动先创建的，则不会被删除</strong><br>附上一些测试脚本：</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">--建测试表</div><div class="line">create table GE_TEST</div><div class="line">(   id    	         NUMBER(19) not null,</div><div class="line">    bill_code            VARCHAR2(255 CHAR)</div><div class="line">);</div><div class="line">--创建唯一约束</div><div class="line">alter table ge_test add constraint idx_bc unique(bill_code);</div><div class="line">--删除约束</div><div class="line">alter table ge_test drop constraint idx_bc</div><div class="line">--创建索引</div><div class="line">create index idx_bc on ge_test(bill_code);</div><div class="line">--删除索引</div><div class="line">drop index idx_bc</div><div class="line">--查看约束</div><div class="line">SELECT constraint_name,constraint_type,table_name,index_owner,index_name FROM user_constraints where table_name = &apos;GE_TEST&apos;;</div><div class="line">--查看索引</div><div class="line">SELECT index_name,index_type FROM user_indexes t WHERE t.table_name=&apos;GE_TEST&apos;;</div></pre></td></tr></table></figure>
-<p>删除唯一约束保留索引正确姿势：<br><code>Alter table table_name Drop Constraint idx_name keep index</code></p>
-<p>为了避免再发生这种情况。写了个Ruby脚本去检查每次要执行的DDL脚本。把删除索引和删除唯一约束都定义为危险动作。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">#!/usr/bin/env ruby</div><div class="line">filename = ARGV[0]</div><div class="line">enc = ARGV.length &gt; 1 ? ARGV[1].to_s : &apos;utf-8&apos;</div><div class="line">if File.exist?(filename)</div><div class="line">    file = File.open(filename, &quot;r:#&#123;enc&#125;&quot;)</div><div class="line">    file.each_line &#123; |line| print &quot;#&#123;file.lineno&#125; : &quot;, line if /DROP +(CONSTRAINT|INDEX)/i =~ line &#125;</div><div class="line">    file.close</div><div class="line">    puts &quot;Done&quot;</div><div class="line">else</div><div class="line">    puts &quot;No file: #&#123;filename&#125;&quot;</div><div class="line">end</div></pre></td></tr></table></figure>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/09/27/唯一约束和唯一索引/" data-id="cj31pzrmz000irndm9d57yd8e" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/oracle/">oracle</a></li></ul>
-
     </footer>
   </div>
   
@@ -798,6 +800,24 @@
     <h3 class="widget-title">recents</h3>
     <div class="widget">
       <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              <a href="/2017/07/20/springboot的localcache实现/" class="thumbnail">
+  
+    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/syx3uchzjlo-ethan-robertson.jpg
+)" alt="springboot的localcache实现" class="thumbnail-image"></span>
+  
+</a>
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"></p>
+              <p class="item-title"><a href="/2017/07/20/springboot的localcache实现/" class="title">springboot的localcache实现</a></p>
+              <p class="item-date"><time datetime="2017-07-20T13:48:42.000Z" itemprop="datePublished">2017-07-20</time></p>
+            </div>
+          </li>
         
           <li>
             
@@ -871,24 +891,6 @@
             </div>
           </li>
         
-          <li>
-            
-            <div class="item-thumbnail">
-              <a href="/2017/01/17/学习正则表达式/" class="thumbnail">
-  
-    <span style="background-image:url(http://7xkc2a.com1.z0.glb.clouddn.com/ljqedqamani-ben-white.jpg
-)" alt="学习正则表达式" class="thumbnail-image"></span>
-  
-</a>
-            </div>
-            
-            <div class="item-inner">
-              <p class="item-category"></p>
-              <p class="item-title"><a href="/2017/01/17/学习正则表达式/" class="title">学习正则表达式</a></p>
-              <p class="item-date"><time datetime="2017-01-17T12:00:57.000Z" itemprop="datePublished">2017-01-17</time></p>
-            </div>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -900,7 +902,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Coding-life/">Coding life</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/notes/">notes</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/oracle/">oracle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Coding-life/">Coding life</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/notes/">notes</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/oracle/">oracle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/spring-boot/">spring boot</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -909,7 +911,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">January 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 

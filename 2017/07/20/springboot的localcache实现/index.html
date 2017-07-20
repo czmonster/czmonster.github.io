@@ -3,20 +3,23 @@
 <head>
   <meta charset="utf-8">
   
-  <title>你好,Hexo | Day Day Up</title>
+  <title>springboot的localcache实现 | Day Day Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="折腾了老半天，终于搭起来了！">
+  <meta name="description" content="使用的是spring boot的cache模块，封装得很好。—&amp;gt;官方文档
+原先接入的是redis,后来考虑到性能和场景可能localcache更加合适。所以就打算用guava去实现，后来发现guava cache已经被spring所抛弃，替代的是一个叫caffeine的东东，支持java8。在性能和ttl算法上caffeine更优。使用caffeine的方式和其他cache没什么差别，结合">
 <meta property="og:type" content="article">
-<meta property="og:title" content="你好,Hexo">
-<meta property="og:url" content="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/index.html">
+<meta property="og:title" content="springboot的localcache实现">
+<meta property="og:url" content="http://czmonster.github.io/hexo-theme-icarus/2017/07/20/springboot的localcache实现/index.html">
 <meta property="og:site_name" content="Day Day Up">
-<meta property="og:description" content="折腾了老半天，终于搭起来了！">
-<meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1428954376791-d9ae785dfb2d.jpeg">
-<meta property="og:updated_time" content="2015-07-12T16:07:30.000Z">
+<meta property="og:description" content="使用的是spring boot的cache模块，封装得很好。—&amp;gt;官方文档
+原先接入的是redis,后来考虑到性能和场景可能localcache更加合适。所以就打算用guava去实现，后来发现guava cache已经被spring所抛弃，替代的是一个叫caffeine的东东，支持java8。在性能和ttl算法上caffeine更优。使用caffeine的方式和其他cache没什么差别，结合">
+<meta property="og:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/syx3uchzjlo-ethan-robertson.jpg">
+<meta property="og:updated_time" content="2017-07-20T14:15:02.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="你好,Hexo">
-<meta name="twitter:description" content="折腾了老半天，终于搭起来了！">
-<meta name="twitter:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1428954376791-d9ae785dfb2d.jpeg">
+<meta name="twitter:title" content="springboot的localcache实现">
+<meta name="twitter:description" content="使用的是spring boot的cache模块，封装得很好。—&amp;gt;官方文档
+原先接入的是redis,后来考虑到性能和场景可能localcache更加合适。所以就打算用guava去实现，后来发现guava cache已经被spring所抛弃，替代的是一个叫caffeine的东东，支持java8。在性能和ttl算法上caffeine更优。使用caffeine的方式和其他cache没什么差别，结合">
+<meta name="twitter:image" content="http://7xkc2a.com1.z0.glb.clouddn.com/syx3uchzjlo-ethan-robertson.jpg">
   
   
     <link rel="icon" href="/favicon.png">
@@ -116,7 +119,7 @@
   </div>
 </aside>
       
-      <section id="main"><article id="post-你好,Hexo" class="article article-type-post" itemscope itemprop="blogPost">
+      <section id="main"><article id="post-springboot的localcache实现" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-inner">
     
     
@@ -125,15 +128,15 @@
         
   
     <h1 class="article-title" itemprop="name">
-      你好,Hexo
+      springboot的localcache实现
     </h1>
   
 
         <div class="article-meta">
           <div class="article-date">
   <i class="fa fa-calendar"></i>
-  <a href="/2015/06/17/你好,Hexo/">
-    <time datetime="2015-06-17T14:08:18.000Z" itemprop="datePublished">2015-06-17</time>
+  <a href="/2017/07/20/springboot的localcache实现/">
+    <time datetime="2017-07-20T13:48:42.000Z" itemprop="datePublished">2017-07-20</time>
   </a>
 </div>
           
@@ -142,29 +145,37 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/photo-1428954376791-d9ae785dfb2d.jpeg" alt=""><br>折腾了老半天，终于搭起来了！</p>
+        <p><img src="http://7xkc2a.com1.z0.glb.clouddn.com/syx3uchzjlo-ethan-robertson.jpg" alt=""></p>
+<p>使用的是spring boot的cache模块，封装得很好。—&gt;<a href="https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-caching.html#boot-features-caching-provider-guava" target="_blank" rel="external">官方文档</a></p>
+<p>原先接入的是redis,后来考虑到性能和场景可能localcache更加合适。所以就打算用guava去实现，后来发现guava cache已经被spring所抛弃，替代的是一个叫caffeine的东东，支持java8。在性能和ttl算法上caffeine更优。<br>使用caffeine的方式和其他cache没什么差别，结合注解。直接贴代码。</p>
+<p>pom.xml:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">&lt;dependency&gt;</div><div class="line">    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</div><div class="line">    &lt;artifactId&gt;spring-boot-starter-cache&lt;/artifactId&gt;</div><div class="line">&lt;/dependency&gt;</div><div class="line"></div><div class="line">&lt;dependency&gt;</div><div class="line">    &lt;groupId&gt;com.github.ben-manes.caffeine&lt;/groupId&gt;</div><div class="line">    &lt;artifactId&gt;caffeine&lt;/artifactId&gt;</div><div class="line">&lt;/dependency&gt;</div></pre></td></tr></table></figure>
+<p>CacheConfig.config:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">@Configuration</div><div class="line">@EnableCaching</div><div class="line">public class CacheConfig &#123;</div><div class="line"></div><div class="line"></div><div class="line">    static final int DEFAULT_MAXSIZE = 50000; // 5w条</div><div class="line">    static final int DEFAULT_TTL = 7200; // 2小时</div><div class="line"></div><div class="line">    /**</div><div class="line">     * 每个cache缺省：3600秒超时、最多缓存50000条数据，需要修改可以在构造方法的参数中指定。</div><div class="line">     */</div><div class="line">    public enum Caches &#123;</div><div class="line">        OA_USER(21600), // 有效期6小时</div><div class="line">        OA_DEPARTMENT(43200), // 12小时</div><div class="line">        ;</div><div class="line"></div><div class="line">        Caches() &#123;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        Caches(int ttl) &#123;</div><div class="line">            this.ttl = ttl;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        Caches(int ttl, int maxSize) &#123;</div><div class="line">            this.ttl = ttl;</div><div class="line">            this.maxSize = maxSize;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        private int maxSize = DEFAULT_MAXSIZE;    //最大數量</div><div class="line"></div><div class="line">        private int ttl = DEFAULT_TTL;        //过期时间（秒）</div><div class="line"></div><div class="line">        public int getMaxSize() &#123;</div><div class="line">            return maxSize;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        public int getTtl() &#123;</div><div class="line">            return ttl;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    /**</div><div class="line">     * 创建基于Caffeine的Cache Manager</div><div class="line">     */</div><div class="line">    @Bean</div><div class="line">    @Primary</div><div class="line">    public CacheManager caffeineCacheManager() &#123;</div><div class="line">        SimpleCacheManager cacheManager = new SimpleCacheManager();</div><div class="line">        List&lt;CaffeineCache&gt; caches = new ArrayList&lt;&gt;();</div><div class="line">        for (Caches c : Caches.values()) &#123;</div><div class="line">            caches.add(new CaffeineCache(c.name(),</div><div class="line">                    Caffeine.newBuilder().recordStats()</div><div class="line">                            .expireAfterWrite(c.getTtl(), TimeUnit.SECONDS)</div><div class="line">                            .maximumSize(c.getMaxSize())</div><div class="line">                            .build())</div><div class="line">            );</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        cacheManager.setCaches(caches);</div><div class="line">        return cacheManager;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>使用：在方法上加注解@Cacheable</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><div class="line">@Cacheable(value = &quot;OA_USER&quot;)</div><div class="line">public XXX methodXXX(Long id) &#123;</div><div class="line">    ... // get from db</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>缓存淘汰：在方法上加@CacheEvict<br>如果是分布式应用，就需要缓存淘汰广播。（后面有机会补。逃）</p>
+<p>补6月份的博客…太懒了</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2015/06/17/你好,Hexo/" data-id="cj5cir0ug000bx6dm0d4pvv0y" class="article-share-link">Share</a>
+      <a data-url="http://czmonster.github.io/hexo-theme-icarus/2017/07/20/springboot的localcache实现/" data-id="cj5cir0u20004x6dm0rme95gi" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/spring-boot/">spring boot</a></li></ul>
+
     </footer>
   </div>
   
     
 <nav id="article-nav">
   
-    <a href="/2015/07/11/Mac 配置 oracle instant client/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          配置 oracle instant client
-        
-      </div>
-    </a>
   
+    <a href="/2017/05/23/分布式锁实现/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">分布式锁实现</div>
+    </a>
   
 </nav>
 
